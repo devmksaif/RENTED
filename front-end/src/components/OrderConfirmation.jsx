@@ -1,4 +1,4 @@
-import { ChevronLeft, CreditCard, Truck, Calendar, Shield, AlertCircle } from "lucide-react"
+import { ChevronLeft, Calendar, AlertCircle } from "lucide-react"
 import VerticalNavbar from "./VerticalNavbar"
 import Footer from "./Footer"
 import "../styles/OrderConfirmation.css"
@@ -38,6 +38,7 @@ function OrderConfirmation() {
                         <Calendar size={16} />
                         <span>May 15, 2025 - May 22, 2025 (7 days)</span>
                       </div>
+                      <button className="primary-button">Confirm Rental</button>
                     </div>
                     <div className="item-price">
                       <span className="price">$89.99</span>
@@ -56,17 +57,13 @@ function OrderConfirmation() {
                         <Calendar size={16} />
                         <span>May 15, 2025 - May 22, 2025 (7 days)</span>
                       </div>
+                      <button className="primary-button">Confirm Rental</button>
                     </div>
                     <div className="item-price">
                       <span className="price">$129.99</span>
                       <span className="price-period">/week</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="promo-code">
-                  <input type="text" placeholder="Enter promo code" className="promo-input" />
-                  <button className="promo-button">Apply</button>
                 </div>
 
                 <div className="order-totals">
@@ -79,80 +76,17 @@ function OrderConfirmation() {
                     <span className="total-value">$500.00</span>
                   </div>
                   <div className="total-row">
-                    <span className="total-label">Delivery Fee</span>
-                    <span className="total-value">$15.00</span>
-                  </div>
-                  <div className="total-row">
                     <span className="total-label">Tax</span>
                     <span className="total-value">$21.99</span>
                   </div>
                   <div className="total-row grand-total">
                     <span className="total-label">Total</span>
-                    <span className="total-value">$756.97</span>
+                    <span className="total-value">$741.97</span>
                   </div>
                 </div>
               </div>
 
               <div className="order-details-section">
-                <div className="shipping-info">
-                  <div className="section-header">
-                    <h2 className="section-title">Shipping Information</h2>
-                    <a href="#" className="edit-link">Edit</a>
-                  </div>
-                  <div className="info-card">
-                    <div className="info-icon">
-                      <Truck size={20} />
-                    </div>
-                    <div className="info-content">
-                      <h3 className="info-name">Alex Johnson</h3>
-                      <p className="info-address">123 Main Street, Apt 4B</p>
-                      <p className="info-address">New York, NY 10001</p>
-                      <p className="info-contact">+1 (555) 123-4567</p>
-                      <div className="delivery-option">
-                        <span className="delivery-label">Delivery Method:</span>
-                        <span className="delivery-value">Standard Delivery (2-3 business days)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="payment-info">
-                  <div className="section-header">
-                    <h2 className="section-title">Payment Method</h2>
-                    <a href="#" className="edit-link">Edit</a>
-                  </div>
-                  <div className="info-card">
-                    <div className="info-icon">
-                      <CreditCard size={20} />
-                    </div>
-                    <div className="info-content">
-                      <h3 className="payment-method">Visa ending in 4242</h3>
-                      <p className="payment-expiry">Expires 05/2026</p>
-                      <p className="billing-address">Billing address same as shipping</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rental-protection">
-                  <div className="protection-header">
-                    <Shield size={20} />
-                    <h2 className="protection-title">Rental Protection Plan</h2>
-                  </div>
-                  <p className="protection-description">
-                    Add protection for accidental damage, spills, and more for just $29.99.
-                  </p>
-                  <div className="protection-options">
-                    <label className="protection-option">
-                      <input type="radio" name="protection" value="yes" defaultChecked />
-                      <span className="option-text">Yes, add protection ($29.99)</span>
-                    </label>
-                    <label className="protection-option">
-                      <input type="radio" name="protection" value="no" />
-                      <span className="option-text">No, I'll be responsible for any damages</span>
-                    </label>
-                  </div>
-                </div>
-
                 <div className="terms-section">
                   <label className="terms-checkbox">
                     <input type="checkbox" defaultChecked />
@@ -175,7 +109,6 @@ function OrderConfirmation() {
 
                 <div className="action-buttons">
                   <button className="secondary-button">Back to Cart</button>
-                  <button className="primary-button">Confirm Order</button>
                 </div>
               </div>
             </div>
