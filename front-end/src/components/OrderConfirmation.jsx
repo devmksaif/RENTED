@@ -1,4 +1,4 @@
-import { ChevronLeft, Calendar, AlertCircle } from "lucide-react"
+import { ChevronLeft, Calendar, AlertCircle, MessageCircle } from "lucide-react"
 import VerticalNavbar from "./VerticalNavbar"
 import Footer from "./Footer"
 import "../styles/OrderConfirmation.css"
@@ -22,7 +22,7 @@ function OrderConfirmation() {
             <div className="confirmation-content">
               <div className="order-summary-section">
                 <div className="section-header">
-                  <h2 className="section-title">Order Summary</h2>
+                  <h2 className="section-title">Rental Summary</h2>
                   <a href="#" className="edit-link">Edit Cart</a>
                 </div>
 
@@ -38,7 +38,19 @@ function OrderConfirmation() {
                         <Calendar size={16} />
                         <span>May 15, 2025 - May 22, 2025 (7 days)</span>
                       </div>
-                      <button className="primary-button">Confirm Rental</button>
+                      <div className="renter-info">
+                        <h4 className="renter-title">Renter Information</h4>
+                        <p className="renter-name">John Doe</p>
+                        <p className="renter-contact">+1 (555) 123-4567</p>
+                        <p className="renter-email">john.doe@example.com</p>
+                      </div>
+                      <div className="item-actions">
+                        <button className="primary-button">Confirm Rental</button>
+                        <button className="text-owner-button">
+                          <MessageCircle size={16} />
+                          <span>Text Owner</span>
+                        </button>
+                      </div>
                     </div>
                     <div className="item-price">
                       <span className="price">$89.99</span>
@@ -57,7 +69,19 @@ function OrderConfirmation() {
                         <Calendar size={16} />
                         <span>May 15, 2025 - May 22, 2025 (7 days)</span>
                       </div>
-                      <button className="primary-button">Confirm Rental</button>
+                      <div className="renter-info">
+                        <h4 className="renter-title">Renter Information</h4>
+                        <p className="renter-name">John Doe</p>
+                        <p className="renter-contact">+1 (555) 123-4567</p>
+                        <p className="renter-email">john.doe@example.com</p>
+                      </div>
+                      <div className="item-actions">
+                        <button className="primary-button">Confirm Rental</button>
+                        <button className="text-owner-button">
+                          <MessageCircle size={16} />
+                          <span>Text Owner</span>
+                        </button>
+                      </div>
                     </div>
                     <div className="item-price">
                       <span className="price">$129.99</span>
