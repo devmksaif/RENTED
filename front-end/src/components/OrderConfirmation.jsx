@@ -11,10 +11,6 @@ function OrderConfirmation() {
         <div className="main-content">
           <div className="confirmation-container">
             <div className="confirmation-header">
-              <a href="#" className="back-link">
-                <ChevronLeft size={20} />
-                <span>Back to Cart</span>
-              </a>
               <h1 className="page-title">Review Your Order</h1>
               <p className="page-subtitle">Please review your order details before confirming your purchase.</p>
             </div>
@@ -129,10 +125,6 @@ function OrderConfirmation() {
                     Your security deposit will be refunded within 5 business days after the items are returned in their
                     original condition.
                   </p>
-                </div>
-
-                <div className="action-buttons">
-                  <button className="secondary-button">Back to Cart</button>
                 </div>
               </div>
             </div>
