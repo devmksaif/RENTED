@@ -3,6 +3,7 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
+const Notification = require('../models/Notification');
 
 // Get all bookings for a user
 router.get('/user', auth, async (req, res) => {
@@ -60,10 +61,12 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Update the create booking route
+
 // Create a new booking
 router.post('/', auth, async (req, res) => {
   try {
-    const { productId, startDate, endDate } = req.body;
+    const { productId, startDate, endDate, quantity, totalPrice, paymentMethod, shippingAddress } = req.body;
     
     // Validate dates
     const start = new Date(startDate);
@@ -100,9 +103,12 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Product is already booked for the selected dates' });
     }
     
-    // Calculate total price (days * daily price)
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    const totalPrice = days * product.price;
+    // Calculate total price if not provided
+    let calculatedTotalPrice = totalPrice;
+    if (!calculatedTotalPrice) {
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      calculatedTotalPrice = days * product.price * (quantity || 1);
+    }
     
     // Create booking
     const booking = new Booking({
@@ -110,9 +116,11 @@ router.post('/', auth, async (req, res) => {
       user: req.user._id,
       startDate,
       endDate,
-      totalPrice,
+      quantity: quantity || 1,
+      totalPrice: calculatedTotalPrice,
       status: 'Pending',
-      paymentStatus: 'Pending'
+      paymentStatus: paymentMethod === 'cash-on-delivery' ? 'Pending' : 'Pending',
+      shippingAddress: shippingAddress || ''
     });
     
     const newBooking = await booking.save();
@@ -120,6 +128,20 @@ router.post('/', auth, async (req, res) => {
     // Update product availability
     product.availability = 'Booked';
     await product.save();
+    
+    // Create notification for product owner
+    const notification = new Notification({
+      recipient: product.owner,
+      type: 'booking',
+      title: 'New Booking Request',
+      message: `You have a new booking request for "${product.title}"`,
+      relatedTo: {
+        model: 'Booking',
+        id: newBooking._id
+      }
+    });
+    
+    await notification.save();
     
     res.status(201).json(newBooking);
   } catch (error) {
@@ -224,6 +246,126 @@ router.delete('/:id', auth, async (req, res) => {
     res.json({ message: 'Booking cancelled successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Add this route to complete a booking
+router.patch('/:id/complete', auth, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+    
+    // Check if product belongs to the user
+    const product = await Product.findById(booking.product);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    if (product.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to complete this booking' });
+    }
+    
+    // Check if booking is in the right state
+    if (booking.status !== 'Confirmed') {
+      return res.status(400).json({ message: 'Only confirmed bookings can be completed' });
+    }
+    
+    booking.status = 'Completed';
+    await booking.save();
+    
+    // Update product availability
+    product.availability = 'Available';
+    await product.save();
+    
+    // Create notification for renter
+    const notification = new Notification({
+      recipient: booking.user,
+      type: 'booking',
+      title: 'Booking Completed',
+      message: `Your booking for "${product.title}" has been marked as completed. Please leave a review!`,
+      relatedTo: {
+        model: 'Booking',
+        id: booking._id
+      }
+    });
+    
+    await notification.save();
+    
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add this route to process payments
+const Payment = require('../models/Payment');
+
+// Process payment for bookings
+router.post('/payment', auth, async (req, res) => {
+  try {
+    const { bookingIds, paymentMethod, amount } = req.body;
+    
+    if (!bookingIds || !bookingIds.length) {
+      return res.status(400).json({ message: 'No bookings specified' });
+    }
+    
+    // Validate all bookings exist and belong to the user
+    const bookings = await Booking.find({
+      _id: { $in: bookingIds },
+      user: req.user._id
+    }).populate('product');
+    
+    if (bookings.length !== bookingIds.length) {
+      return res.status(400).json({ message: 'One or more bookings are invalid or do not belong to you' });
+    }
+    
+    // Create payment record
+    const payment = new Payment({
+      user: req.user._id,
+      bookings: bookingIds,
+      amount,
+      paymentMethod,
+      status: paymentMethod === 'cash-on-delivery' ? 'Pending' : 'Completed'
+    });
+    
+    const savedPayment = await payment.save();
+    
+    // Update booking payment status
+    const paymentStatus = paymentMethod === 'cash-on-delivery' ? 'Pending' : 'Paid';
+    const bookingStatus = paymentMethod === 'cash-on-delivery' ? 'Pending' : 'Confirmed';
+    
+    await Promise.all(bookings.map(booking => {
+      booking.paymentStatus = paymentStatus;
+      booking.status = bookingStatus;
+      booking.paymentMethod = paymentMethod;
+      return booking.save();
+    }));
+    
+    // Create notifications for product owners
+    const ownerNotifications = bookings.map(booking => {
+      return {
+        recipient: booking.product.owner,
+        type: 'payment',
+        title: paymentMethod === 'cash-on-delivery' ? 'New Cash on Delivery Order' : 'New Payment Received',
+        message: `A ${paymentMethod === 'cash-on-delivery' ? 'cash on delivery order' : 'payment'} has been made for "${booking.product.title}"`,
+        relatedTo: {
+          model: 'Booking',
+          id: booking._id
+        }
+      };
+    });
+    
+    if (ownerNotifications.length) {
+      await Notification.insertMany(ownerNotifications);
+    }
+    
+    res.status(201).json(savedPayment);
+  } catch (error) {
+    console.error('Payment processing error:', error);
+    res.status(500).json({ message: 'Failed to process payment' });
   }
 });
 

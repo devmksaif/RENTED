@@ -1,14 +1,11 @@
-import React from 'react';
-import ProductCard from './ProductCard';
-import '../styles/ProductList.css';
+import ProductCard from "./ProductCard"
+import "../styles/ProductList.css"
 
-function ProductList({ products }) {
+function ProductList({ products, onAddToCart }) {
   return (
     <div className="product-list">
       {products.length > 0 ? (
-        products.map(product => (
-          <ProductCard key={product._id} product={product} />
-        ))
+        products.map((product) => <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />)
       ) : (
         <div className="no-products">
           <div className="no-products-icon">
@@ -19,7 +16,7 @@ function ProductList({ products }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default ProductList;
+export default ProductList

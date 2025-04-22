@@ -30,6 +30,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: 'https://via.placeholder.com/300x200'
   },
+  images: {
+    type: [String],
+    default: []
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -37,7 +41,7 @@ const productSchema = new mongoose.Schema({
   },
   availability: {
     type: String,
-    enum: ['Available', 'Booked', 'Maintenance'],
+    enum: ['Available', 'Unavailable', 'Maintenance', 'Booked'],
     default: 'Available'
   },
   rating: {
@@ -49,9 +53,47 @@ const productSchema = new mongoose.Schema({
   reviews: {
     type: Number,
     default: 0
+  },
+  features: {
+    type: [String],
+    default: []
+  },
+  condition: {
+    type: String,
+    enum: ['New', 'Like New', 'Good', 'Fair', 'Poor'],
+    default: 'Good'
+  },
+  deposit: {
+    type: Number,
+    default: 0
+  },
+  minRentalDays: {
+    type: Number,
+    default: 1
+  },
+  maxRentalDays: {
+    type: Number,
+    default: 30
+  },
+  featured: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
+});
+
+// Add a virtual for calculating average rating
+productSchema.virtual('averageRating').get(function() {
+  return this.reviews > 0 ? this.rating : 0;
+});
+
+// Add text index for better search
+productSchema.index({ 
+  title: 'text', 
+  description: 'text', 
+  category: 'text',
+  location: 'text'
 });
 
 const Product = mongoose.model('Product', productSchema);

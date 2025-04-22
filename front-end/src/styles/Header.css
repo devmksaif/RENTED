@@ -83,18 +83,32 @@
   align-items: center;
 }
 
+/* Add these styles to remove underline from list item button */
 .action-button {
+  text-decoration: none;
   display: flex;
   align-items: center;
+  gap: 8px;
   background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 30px;
-  padding: 10px 20px;
-  margin-right: 20px;
+  border-radius: 6px;
+  padding: 8px 16px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+.action-button:hover {
+  background-color: #388E3C;
+  text-decoration: none;
+}
+
+/* Make sure all links in header don't have underlines */
+.header a, 
+.header button,
+.header-actions a {
+  text-decoration: none;
 }
 
 .action-button i {
@@ -154,5 +168,180 @@
   
   .action-button i {
     margin-right: 0;
+  }
+}
+
+
+/* Add these styles to your existing Header.css file */
+
+.logo-link {
+  text-decoration: none;
+}
+
+.cart-icon {
+  margin-left: 15px;
+  font-size: 20px;
+  color: #555;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Add these styles to your existing Header.css file */
+
+.notification-icon-wrapper {
+  position: relative;
+}
+
+.notification-icon {
+  margin-right: 15px;
+  font-size: 20px;
+  color: #555;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #f44336;
+  color: white;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Add these styles to your existing Header.css file */
+
+.profile-icon-wrapper {
+  position: relative;
+}
+
+.profile-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.user-avatar.large {
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  width: 280px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.user-info {
+  margin-left: 15px;
+}
+
+.user-info h4 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.user-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.profile-dropdown-menu {
+  padding: 10px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item i {
+  margin-right: 12px;
+  width: 16px;
+  color: #666;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 8px 0;
+}
+
+/* Animation for dropdown */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -19,6 +19,11 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  quantity: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
   totalPrice: {
     type: Number,
     required: true
@@ -32,6 +37,14 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending', 'Paid', 'Refunded'],
     default: 'Pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['credit-card', 'paypal', 'apple-pay', 'google-pay', 'cash-on-delivery'],
+    default: 'cash-on-delivery'
+  },
+  shippingAddress: {
+    type: String
   }
 }, {
   timestamps: true

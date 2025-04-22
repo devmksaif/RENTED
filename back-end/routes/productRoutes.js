@@ -3,17 +3,93 @@ const router = express.Router();
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 
-// Get all products
+// Get all products with filtering (public route)
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
+    const { category, minPrice, maxPrice, location, availability, rating } = req.query;
+    
+    // Build filter object
+    const filter = {};
+    
+    if (category) filter.category = category;
+    if (location) filter.location = { $regex: location, $options: 'i' };
+    if (availability) filter.availability = availability;
+    if (rating) filter.rating = { $gte: Number(rating) };
+    
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get a single product
+// Add a search route
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+    
+    const products = await Product.find({
+      $or: [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } },
+        { category: { $regex: query, $options: 'i' } }
+      ]
+    });
+    
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get products by category
+router.get('/category/:category', async (req, res) => {
+  try {
+    const products = await Product.find({ 
+      category: { $regex: new RegExp(req.params.category, 'i') }
+    });
+    
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get featured products (top rated)
+router.get('/featured', async (req, res) => {
+  try {
+    const products = await Product.find({ availability: 'Available' })
+      .sort({ rating: -1 })
+      .limit(6);
+    
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get products by current user (for listings page)
+router.get('/user', auth, async (req, res) => {
+  try {
+    const products = await Product.find({ owner: req.user._id });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get a single product (public route)
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -26,7 +102,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a new product
+// Create a new product (protected route)
 router.post('/', auth, async (req, res) => {
   const product = new Product({
     ...req.body,
@@ -41,7 +117,7 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Update a product
+// Update a product (protected route)
 router.patch('/:id', auth, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -66,7 +142,7 @@ router.patch('/:id', auth, async (req, res) => {
   }
 });
 
-// Delete a product
+// Delete a product (protected route)
 router.delete('/:id', auth, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -80,7 +156,7 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
     
-    await product.remove();
+    await product.deleteOne();
     res.json({ message: 'Product deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
