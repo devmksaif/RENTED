@@ -80,8 +80,19 @@ function ProductCard({ product, onAddToCart }) {
     e.preventDefault();
     e.stopPropagation();
     
-    if (product.availability !== 'Available') {
+    if (!product || product.availability !== 'Available') {
       console.error('Product is not available for rent');
+      return;
+    }
+    
+    // Validate rental duration against min/max if available
+    if (product.minRentalDays && selectedDuration < product.minRentalDays) {
+      console.error(`Minimum rental period is ${product.minRentalDays} days`);
+      return;
+    }
+    
+    if (product.maxRentalDays && selectedDuration > product.maxRentalDays) {
+      console.error(`Maximum rental period is ${product.maxRentalDays} days`);
       return;
     }
     
@@ -95,16 +106,14 @@ function ProductCard({ product, onAddToCart }) {
       }
     } else {
       try {
-        if (product.availability === 'Available') {
-          await saveCart({
-            productId: product._id,
-            quantity: 1,
-            duration: selectedDuration
-          });
-          
-          setAddSuccess(true);
-          setTimeout(() => setAddSuccess(false), 2000);
-        }
+        await saveCart({
+          productId: product._id,
+          quantity: 1,
+          duration: selectedDuration
+        });
+        
+        setAddSuccess(true);
+        setTimeout(() => setAddSuccess(false), 2000);
       } catch (error) {
         console.error('Error adding to cart:', error);
       }
@@ -159,9 +168,9 @@ function ProductCard({ product, onAddToCart }) {
             <img 
               src={product.image || "https://via.placeholder.com/300x200"} 
               alt={product.title} 
-              className={isHovered ? "zoom" : ""}
+              className={`full-image ${isHovered ? "zoom" : ""}`}
             />
-            <div className="product-badge">${product.price}/day</div>
+            <div className="product-price">${product.price}<span>/day</span></div>
             
             {product.availability !== "Available" && (
               <div className={`availability-badge ${product.availability.toLowerCase()}`}>
@@ -175,48 +184,61 @@ function ProductCard({ product, onAddToCart }) {
               </div>
             )}
           </div>
+          
           <div className="product-details">
-            <div className="product-meta">
-              <div className="product-category">{product.category}</div>
-              <div className="product-rating">
-                {renderStars(product.rating)}
-                <span className="review-count">({product.reviews})</span>
+            <div className="product-header">
+              <h3 className="product-title">{product.title}</h3>
+              <div className="product-meta">
+                <div className="product-category">{product.category}</div>
+                <div className="product-rating">
+                  {renderStars(product.rating)}
+                  <span className="review-count">({product.reviews})</span>
+                </div>
               </div>
             </div>
-            <h3 className="product-title">{product.title}</h3>
-            <p className="product-description">{product.description.substring(0, 100)}...</p>
-            <div className="product-footer">
-              <div className="product-location">
-                <i className="fas fa-map-marker-alt"></i>
-                <span>{product.location}</span>
-              </div>
+            
+            <div className="product-location">
+              <i className="fas fa-map-marker-alt"></i>
+              <span>{product.location}</span>
             </div>
+            
+            <p className="product-description">{product.description.substring(0, 80)}...</p>
+            
             {isHovered && product.features && product.features.length > 0 && (
               <div className="product-features">
                 <ul>
-                  {product.features.slice(0, 3).map((feature, index) => (
+                  {product.features.slice(0, 2).map((feature, index) => (
                     <li key={index}><i className="fas fa-check"></i> {feature}</li>
                   ))}
-                  {product.features.length > 3 && <li>+ {product.features.length - 3} more</li>}
+                  {product.features.length > 2 && <li className="more-features">+ {product.features.length - 2} more</li>}
                 </ul>
               </div>
             )}
+            
+            <div className="product-actions">
+              <Link to={`/product/${product._id}`} className="view-details-btn">
+                View Details
+              </Link>
+              <button
+                className={`add-to-cart-btn ${addSuccess ? 'success' : ''}`}
+                onClick={handleAddToCart}
+                disabled={product.availability !== "Available"}
+                aria-label="Add to cart"
+              >
+                <i className={addSuccess ? "fas fa-check" : "fas fa-shopping-cart"}></i>
+                <span>{addSuccess ? "Added" : "Rent"}</span>
+              </button>
+            </div>
           </div>
         </Link>
         
-        <div className="product-actions">
-          <Link to={`/product/${product._id}`} className="view-details-btn">
-            View Details
-          </Link>
-          <button
-            className="add-to-cart-btn"
-            onClick={handleAddToCart}
-            disabled={product.availability !== "Available"}
-            aria-label="Add to cart"
-          >
-            <i className={addSuccess ? "fas fa-check" : "fas fa-shopping-cart"}></i>
-          </button>
-        </div>
+        <button 
+          className="wishlist-button"
+          onClick={(e) => e.preventDefault()}
+          aria-label="Add to wishlist"
+        >
+          <i className="far fa-heart"></i>
+        </button>
         
         {showRentalOptions && (
           <div className="rental-options-overlay" onClick={handleCancelRental}>
@@ -255,14 +277,6 @@ function ProductCard({ product, onAddToCart }) {
             </div>
           </div>
         )}
-        
-        <button 
-          className="wishlist-button"
-          onClick={(e) => e.preventDefault()}
-          aria-label="Add to wishlist"
-        >
-          <i className="far fa-heart"></i>
-        </button>
       </div>
     </div>
   )

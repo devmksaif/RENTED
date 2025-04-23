@@ -2,7 +2,10 @@
 .checkout-container {
   max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -86,6 +89,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   padding: 25px;
+  margin-top: 2rem;
 }
 
 .order-summary-sidebar {
@@ -176,12 +180,41 @@
   border: none;
   padding: 14px 25px;
   font-size: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .place-order-button:hover {
   background-color: #388E3C;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.place-order-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.place-order-button:hover::after {
+  transform: translateX(0);
+}
+
+.place-order-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.place-order-button i {
+  margin-right: 8px;
 }
 
 .place-order-button:disabled {
@@ -518,4 +551,340 @@
   .step-label {
     font-size: 12px;
   }
+}
+
+/* Add these responsive styles to improve mobile experience */
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .checkout-content {
+    flex-direction: column;
+  }
+  
+  .checkout-container {
+    padding: 1rem;
+  }
+  
+  .checkout-form-container {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .order-summary-sidebar {
+    width: 100%;
+    position: relative;
+    top: 0;
+    right: 0;
+    max-height: none;
+    margin-bottom: 20px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  /* Show mobile proceed button */
+  .mobile-proceed-btn-container {
+    display: block;
+    margin-top: 20px;
+  }
+  
+  .mobile-proceed-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-proceed-btn i {
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+  }
+  
+  .mobile-proceed-btn:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .mobile-proceed-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-proceed-btn:hover i {
+    transform: translateX(3px);
+  }
+  
+  /* Hide desktop form buttons on mobile */
+  .form-buttons {
+    display: none;
+  }
+  
+  /* Adjust order items in review page */
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .item-image {
+    margin-bottom: 10px;
+  }
+  
+  .item-price {
+    margin-top: 10px;
+    align-self: flex-end;
+  }
+  
+  /* Payment method styles */
+  .payment-methods {
+    flex-direction: column;
+  }
+  
+  .payment-method {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  /* Credit card form */
+  .credit-card-details .form-row {
+    flex-direction: column;
+  }
+  
+  .credit-card-details .form-group {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  /* Step indicator */
+  .checkout-steps {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  
+  .step-label {
+    font-size: 12px;
+  }
+  
+  .step-connector {
+    width: 30px;
+  }
+  
+  .step-indicators {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .step-indicator {
+    margin-bottom: 10px;
+  }
+}
+
+/* Credit card formatting improvements */
+.card-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.card-input-container i {
+  position: absolute;
+  left: 10px;
+  color: #666;
+}
+
+.card-input-container input {
+  padding-left: 35px;
+}
+
+.card-security-message {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.card-security-message i {
+  margin-right: 8px;
+  color: #4CAF50;
+}
+
+/* Add progress bar styles */
+.progress-container {
+  width: 100%;
+  max-width: 600px;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  margin: 15px auto 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4CAF50;
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+}
+
+.step-navigation button {
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  font-weight: 600;
+  padding: 10px 20px;
+}
+
+.step-navigation button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.step-navigation button:active {
+  transform: translateY(0);
+}
+
+.checkout-form-container input,
+.checkout-form-container select {
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  padding: 12px;
+  transition: border 0.3s ease;
+}
+
+.checkout-form-container input:focus,
+.checkout-form-container select:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.checkout-form-container label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* Style for the form text helper */
+.form-text {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #757575;
+}
+
+/* Delivery date input styling */
+input[type="date"] {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+  cursor: pointer;
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Credit card type indicator */
+.card-type-indicator {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #4CAF50;
+  display: flex;
+  align-items: center;
+}
+
+.card-type-indicator span {
+  margin-left: 5px;
+}
+
+.card-type-indicator:before {
+  content: '\f058';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  margin-right: 6px;
+  color: #4CAF50;
+}
+
+/* Enhanced card input container with card type icons */
+.card-input-container i.fab {
+  font-size: 18px;
+  color: #1a73e8;
+}
+
+/* Loader overlay */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.loader-content {
+  text-align: center;
+  padding: 30px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 90%;
+}
+
+.loader-spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #4CAF50;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1.5s linear infinite;
+}
+
+.loader-content p {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.loader-subtitle {
+  font-size: 14px !important;
+  color: #666 !important;
+  font-weight: normal !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

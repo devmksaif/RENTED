@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { saveCart } from "../services/api" // Add this import
 import { getProductById } from '../services/api'; // Add this import
@@ -16,6 +16,10 @@ function ProductDetail({ onAddToCart }) {
   const [activeImage, setActiveImage] = useState(0);
   const [rentalDuration, setRentalDuration] = useState(7);
   const [dateError, setDateError] = useState('');
+  const [zoomed, setZoomed] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const imageRef = useRef(null);
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -68,48 +72,88 @@ function ProductDetail({ onAddToCart }) {
     }
   }, [startDate, endDate, product]);
 
-  const handleAddToCart = async () => {
-    if (product) {
-      try {
-        if (product.availability !== 'Available') {
-          setError('This product is not currently available for rent');
-          return;
-        }
-
-        // Validate rental duration against min/max
-        const minDays = product.minRentalDays || 1;
-        const maxDays = product.maxRentalDays || 30;
-        
-        if (rentalDuration < minDays || rentalDuration > maxDays) {
-          setDateError(`Rental period must be between ${minDays} and ${maxDays} days`);
-          return;
-        }
-        
-        if (onAddToCart) {
-          await onAddToCart(product, rentalDuration, quantity, startDate, endDate);
-          setAddedToCart(true);
-          setTimeout(() => setAddedToCart(false), 3000);
-        } else {
-          const totalPrice = product.price * quantity * rentalDuration;
-          
-          await saveCart({
-            productId: product._id,
-            quantity: quantity,
-            duration: rentalDuration,
-            startDate: startDate,
-            endDate: endDate,
-            totalPrice: totalPrice
-          });
-        }
-        
-        window.dispatchEvent(new Event('cartUpdated'));
-        setAddedToCart(true);
-        setTimeout(() => setAddedToCart(false), 3000);
-      } catch (error) {
-        console.error('Error adding to cart:', error);
-        setError('Failed to add item to cart. Please try again.');
-      }
+  // Handle end date update when rental duration changes via slider
+  useEffect(() => {
+    if (startDate && rentalDuration) {
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(start.getDate() + parseInt(rentalDuration));
+      setEndDate(end.toISOString().split('T')[0]);
     }
+  }, [rentalDuration, startDate]);
+
+  const handleAddToCart = async () => {
+    if (!product) {
+      setError('Product information is not available. Please try again.');
+      return;
+    }
+    
+    try {
+      if (product.availability !== 'Available') {
+        setError('This product is not currently available for rent');
+        return;
+      }
+
+      // Validate rental duration against min/max
+      const minDays = product.minRentalDays || 1;
+      const maxDays = product.maxRentalDays || 30;
+      
+      if (rentalDuration < minDays || rentalDuration > maxDays) {
+        setDateError(`Rental period must be between ${minDays} and ${maxDays} days`);
+        return;
+      }
+      
+      // Calculate total price
+      const totalPrice = product.price * quantity * rentalDuration;
+      
+      // Add to cart either through parent component or directly
+      if (onAddToCart) {
+        await onAddToCart(product, rentalDuration, quantity, startDate, endDate);
+      } else {
+        await saveCart({
+          productId: product._id,
+          quantity: quantity,
+          duration: rentalDuration,
+          startDate: startDate,
+          endDate: endDate,
+          totalPrice: totalPrice
+        });
+      }
+      
+      // Clear any previous errors
+      setError(null);
+      setDateError('');
+      
+      // Show success message
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 3000);
+      
+      // Dispatch custom event for cart update
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setError('Failed to add item to cart. Please try again.');
+    }
+  };
+
+  const handleImageZoom = (e) => {
+    if (!imageRef.current) return;
+    
+    const { left, top, width, height } = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    
+    setZoomPosition({ x, y });
+  };
+
+  const toggleWishlist = () => {
+    setIsInWishlist(!isInWishlist);
+    // Here you would typically call an API to update the wishlist
+  };
+
+  const handleDurationChange = (e) => {
+    const newDuration = parseInt(e.target.value);
+    setRentalDuration(newDuration);
   };
 
   // Format date for display
@@ -128,6 +172,15 @@ function ProductDetail({ onAddToCart }) {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p>Loading product details...</p>
+        <div className="loading-skeleton">
+          <div className="skeleton-image"></div>
+          <div className="skeleton-content">
+            <div className="skeleton-title"></div>
+            <div className="skeleton-text"></div>
+            <div className="skeleton-text"></div>
+            <div className="skeleton-price"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -166,6 +219,11 @@ function ProductDetail({ onAddToCart }) {
     ? product.images 
     : [product.image || "https://via.placeholder.com/600x400"];
 
+  // Calculate available dates (for demo purposes)
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + 90); // Allow booking 90 days in advance
+
   return (
     <div className="product-detail-container">
       <div className="breadcrumb">
@@ -176,11 +234,21 @@ function ProductDetail({ onAddToCart }) {
       
       <div className="product-detail">
         <div className="product-gallery">
-          <div className="main-image-container">
+          <div 
+            className={`main-image-container ${zoomed ? 'zoomed' : ''}`}
+            onMouseMove={zoomed ? handleImageZoom : null}
+            onMouseEnter={() => setZoomed(true)}
+            onMouseLeave={() => setZoomed(false)}
+          >
             <img 
+              ref={imageRef}
               src={productImages[activeImage]} 
               alt={product.title} 
               className="main-product-image" 
+              style={zoomed ? {
+                transform: 'scale(1.5)',
+                transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
+              } : {}}
             />
             {product.featured && (
               <div className="featured-badge">
@@ -190,6 +258,18 @@ function ProductDetail({ onAddToCart }) {
             {product.availability !== "Available" && (
               <div className={`availability-badge ${product.availability.toLowerCase()}`}>
                 {product.availability}
+              </div>
+            )}
+            <button 
+              className={`wishlist-button ${isInWishlist ? 'active' : ''}`}
+              onClick={toggleWishlist}
+              aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart`}></i>
+            </button>
+            {zoomed && (
+              <div className="zoom-instructions">
+                <i className="fas fa-search-plus"></i> Move cursor to zoom
               </div>
             )}
           </div>
@@ -233,6 +313,11 @@ function ProductDetail({ onAddToCart }) {
           <div className="product-price">
             <span className="price-amount">${product.price}</span>
             <span className="price-period">/ day</span>
+            {product.discount > 0 && (
+              <div className="discount-badge">
+                <i className="fas fa-tags"></i> Save {product.discount}%
+              </div>
+            )}
           </div>
           
           <div className="product-description">
@@ -278,7 +363,9 @@ function ProductDetail({ onAddToCart }) {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
+                  max={maxDate.toISOString().split('T')[0]}
                   required
+                  className="date-input"
                 />
               </div>
               <div className="date-input-group">
@@ -289,8 +376,29 @@ function ProductDetail({ onAddToCart }) {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate || new Date().toISOString().split('T')[0]}
+                  max={maxDate.toISOString().split('T')[0]}
                   required
+                  className="date-input"
                 />
+              </div>
+            </div>
+            
+            <div className="duration-slider-container">
+              <label htmlFor="duration-slider">
+                Rental Duration: <span className="duration-value">{rentalDuration} days</span>
+              </label>
+              <input
+                type="range"
+                id="duration-slider"
+                min={product.minRentalDays || 1}
+                max={product.maxRentalDays || 30}
+                value={rentalDuration}
+                onChange={handleDurationChange}
+                className="duration-slider"
+              />
+              <div className="slider-markers">
+                <span>{product.minRentalDays || 1}</span>
+                <span>{product.maxRentalDays || 30}</span>
               </div>
             </div>
             
@@ -317,9 +425,15 @@ function ProductDetail({ onAddToCart }) {
                       <span>${product.deposit.toFixed(2)}</span>
                     </div>
                   )}
+                  {product.serviceFee > 0 && (
+                    <div className="calc-row">
+                      <span>Service Fee</span>
+                      <span>${product.serviceFee.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="calc-row total">
                     <span>Total</span>
-                    <span>${((product.price * quantity * rentalDuration) + (product.deposit || 0)).toFixed(2)}</span>
+                    <span>${((product.price * quantity * rentalDuration) + (product.deposit || 0) + (product.serviceFee || 0)).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -357,6 +471,15 @@ function ProductDetail({ onAddToCart }) {
               </button>
             </div>
             
+            <div className="booking-options">
+              <button className="request-booking">
+                <i className="fas fa-calendar-check"></i> Request Booking
+              </button>
+              <button className="contact-owner">
+                <i className="fas fa-comment"></i> Ask a Question
+              </button>
+            </div>
+            
             {!startDate || !endDate ? (
               <div className="date-required-message">
                 <i className="fas fa-info-circle"></i> Please select rental dates
@@ -365,7 +488,7 @@ function ProductDetail({ onAddToCart }) {
             
             {addedToCart && (
               <div className="added-to-cart-message">
-                <i className="fas fa-check-circle"></i> Added to cart!
+                <i className="fas fa-check-circle"></i> Added to cart! <Link to="/cart" className="view-cart-link">View Cart</Link>
               </div>
             )}
           </div>
@@ -381,10 +504,41 @@ function ProductDetail({ onAddToCart }) {
                 <div className="owner-rating">
                   <i className="fas fa-star"></i> 4.8 (120 rentals)
                 </div>
+                <div className="owner-response">
+                  <i className="fas fa-clock"></i> Typically responds within 2 hours
+                </div>
               </div>
               <button className="contact-owner-btn">
                 <i className="fas fa-comment"></i> Contact
               </button>
+            </div>
+          </div>
+          
+          <div className="product-review-summary">
+            <h3>Customer Reviews</h3>
+            <div className="review-stats">
+              <div className="average-rating">
+                <span className="rating-large">{product.rating.toFixed(1)}</span>
+                <div className="star-rating">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <i key={star} className={`${star <= Math.round(product.rating) ? 'fas' : 'far'} fa-star`}></i>
+                  ))}
+                </div>
+                <span className="total-reviews">{product.reviews} reviews</span>
+              </div>
+              <Link to={`/product/${id}/reviews`} className="view-all-reviews">
+                View all reviews <i className="fas fa-chevron-right"></i>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="similar-products">
+            <h3>Similar Products</h3>
+            <div className="similar-products-placeholder">
+              <p>Browse similar products in this category</p>
+              <Link to={`/category/${product.category}`} className="browse-more">
+                View More <i className="fas fa-arrow-right"></i>
+              </Link>
             </div>
           </div>
         </div>

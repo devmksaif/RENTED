@@ -424,3 +424,264 @@
     justify-content: center;
   }
 }
+
+/* Partial success alert */
+.partial-success-alert {
+  display: flex;
+  align-items: center;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 12px 15px;
+  border-radius: 5px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.partial-success-alert i {
+  font-size: 20px;
+  margin-right: 15px;
+  color: #f0ad4e;
+}
+
+.partial-success-alert p {
+  margin: 0;
+}
+
+/* Failed bookings section */
+.failed-bookings-section {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.failed-items {
+  margin-top: 15px;
+}
+
+.failed-item {
+  display: flex;
+  padding: 15px;
+  border: 1px solid #ffc4c4;
+  border-radius: 5px;
+  background-color: #fff0f0;
+  margin-bottom: 15px;
+}
+
+.error-reason {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Email confirmation section */
+.email-confirmation-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.send-email-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-email-btn:hover {
+  background-color: #0069d9;
+}
+
+.send-email-btn i {
+  margin-right: 8px;
+}
+
+.button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.email-sent-message {
+  display: flex;
+  align-items: center;
+  color: #28a745;
+  font-weight: 500;
+}
+
+.email-sent-message i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .success-card {
+    padding: 15px;
+    margin: 15px;
+  }
+  
+  .order-info, .shipping-address {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .order-details {
+    flex-direction: column;
+  }
+  
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .item-image {
+    margin-bottom: 10px;
+  }
+  
+  .item-price {
+    margin-top: 10px;
+    align-self: flex-end;
+  }
+  
+  .success-actions {
+    flex-direction: column;
+  }
+  
+  .view-bookings-btn, .continue-shopping-btn {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
+
+/* Order Tracking Component */
+.order-tracking {
+  margin: 30px 0;
+  padding: 25px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.order-tracking h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.order-tracking-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.tracking-item {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.tracking-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
+  color: #757575;
+  z-index: 2;
+}
+
+.tracking-icon.completed {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.tracking-icon.current {
+  background-color: #2196F3;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+  }
+}
+
+.tracking-info {
+  flex-grow: 1;
+}
+
+.tracking-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.tracking-date {
+  font-size: 14px;
+  color: #757575;
+}
+
+.tracking-connector {
+  width: 2px;
+  height: 25px;
+  background-color: #e0e0e0;
+  margin-left: 19px;
+  position: relative;
+  z-index: 1;
+}
+
+.tracking-item:last-child {
+  padding-bottom: 0;
+}
+
+/* Responsive adjustments for tracking */
+@media (max-width: 576px) {
+  .order-tracking {
+    padding: 15px;
+  }
+  
+  .tracking-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .tracking-connector {
+    margin-left: 14px;
+  }
+  
+  .tracking-title {
+    font-size: 14px;
+  }
+  
+  .tracking-date {
+    font-size: 12px;
+  }
+}

@@ -1,16 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/CheckoutSuccess.css';
 
 function CheckoutSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookings, totalAmount, paymentMethod } = location.state || {};
+  const { bookings, totalAmount, paymentMethod, failedBookings, deliveryDate } = location.state || {};
+  const [emailSent, setEmailSent] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   useEffect(() => {
     // If no booking data is available, redirect to home
     if (!bookings) {
       navigate('/');
+      return;
     }
     
     // Clear cart from local storage
@@ -19,6 +22,17 @@ function CheckoutSuccess() {
     // Dispatch event to update cart count in header
     window.dispatchEvent(new Event('cartUpdated'));
   }, [bookings, navigate]);
+  
+  // Function to simulate sending a confirmation email
+  const sendConfirmationEmail = () => {
+    setSendingEmail(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setEmailSent(true);
+      setSendingEmail(false);
+    }, 1500);
+  };
   
   if (!bookings) {
     return null; // Will redirect in useEffect
@@ -44,6 +58,15 @@ function CheckoutSuccess() {
           </div>
           <h1>Order Confirmed!</h1>
           <p>Thank you for your order. Your rental has been successfully placed.</p>
+          
+          {failedBookings && failedBookings.length > 0 && (
+            <div className="partial-success-alert">
+              <i className="fas fa-exclamation-triangle"></i>
+              <div>
+                <p>Some items couldn't be booked. See details below.</p>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="order-details">
@@ -105,6 +128,107 @@ function CheckoutSuccess() {
               </div>
             ))}
           </div>
+          
+          {failedBookings && failedBookings.length > 0 && (
+            <div className="failed-bookings-section">
+              <h3>Items Not Booked</h3>
+              <div className="failed-items">
+                {failedBookings.map((failedItem, index) => (
+                  <div key={index} className="failed-item">
+                    <div className="item-image">
+                      <img 
+                        src={failedItem.item.product?.image || 'https://via.placeholder.com/80x80'} 
+                        alt={failedItem.item.product?.title} 
+                      />
+                    </div>
+                    <div className="item-details">
+                      <h4>{failedItem.item.product?.title}</h4>
+                      <p className="error-reason">{failedItem.error}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="order-tracking">
+          <h3>Delivery Information</h3>
+          <div className="order-tracking-details">
+            <div className="tracking-item">
+              <div className="tracking-icon completed">
+                <i className="fas fa-check-circle"></i>
+              </div>
+              <div className="tracking-info">
+                <div className="tracking-title">Order Confirmed</div>
+                <div className="tracking-date">{orderDate}</div>
+              </div>
+            </div>
+            <div className="tracking-connector"></div>
+            <div className="tracking-item">
+              <div className="tracking-icon current">
+                <i className="fas fa-box"></i>
+              </div>
+              <div className="tracking-info">
+                <div className="tracking-title">Preparing Your Items</div>
+                <div className="tracking-date">In Progress</div>
+              </div>
+            </div>
+            <div className="tracking-connector"></div>
+            <div className="tracking-item">
+              <div className="tracking-icon">
+                <i className="fas fa-truck"></i>
+              </div>
+              <div className="tracking-info">
+                <div className="tracking-title">Out for Delivery</div>
+                <div className="tracking-date">
+                  {deliveryDate ? new Date(deliveryDate).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'Processing'}
+                </div>
+              </div>
+            </div>
+            <div className="tracking-connector"></div>
+            <div className="tracking-item">
+              <div className="tracking-icon">
+                <i className="fas fa-home"></i>
+              </div>
+              <div className="tracking-info">
+                <div className="tracking-title">Delivered</div>
+                <div className="tracking-date">Pending</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="email-confirmation-section">
+          <h3>Get Email Confirmation</h3>
+          {!emailSent ? (
+            <button 
+              className="send-email-btn" 
+              onClick={sendConfirmationEmail}
+              disabled={sendingEmail}
+            >
+              {sendingEmail ? (
+                <>
+                  <div className="button-spinner"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-envelope"></i> Send Confirmation Email
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="email-sent-message">
+              <i className="fas fa-check-circle"></i>
+              <span>Email confirmation has been sent!</span>
+            </div>
+          )}
         </div>
         
         <div className="next-steps">

@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+const locationSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    default: 'Point'
+  },
+  coordinates: {
+    type: [Number], // [longitude, latitude]
+    required: true
+  }
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -25,6 +37,11 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  // Add geolocation for spatial search
+  geoLocation: {
+    type: locationSchema,
+    index: '2dsphere' // Create a geospatial index
   },
   image: {
     type: String,
@@ -78,6 +95,11 @@ const productSchema = new mongoose.Schema({
   featured: {
     type: Boolean,
     default: false
+  },
+  // Add search radius for product visibility (in kilometers)
+  searchRadius: {
+    type: Number,
+    default: 20 // Default 20km radius
   }
 }, {
   timestamps: true

@@ -1,6 +1,26 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const meetingAreaSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  latitude: {
+    type: Number,
+    required: true
+  },
+  longitude: {
+    type: Number,
+    required: true
+  },
+  isDefault: {
+    type: Boolean,
+    default: false
+  }
+}, { _id: true });
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -23,10 +43,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  accountType: {
+    type: String,
+    enum: ['renter', 'rentee', 'both'],
+    default: 'both'
+  },
   address: {
     type: String,
     trim: true
   },
+  meetingAreas: [meetingAreaSchema],
   role: {
     type: String,
     enum: ['user', 'admin'],

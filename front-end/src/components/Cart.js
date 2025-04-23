@@ -25,6 +25,9 @@ function Cart() {
           const localCart = JSON.parse(localCartString);
           if (localCart && Array.isArray(localCart.items)) {
             setCartItems(localCart.items);
+          } else if (localCart && Array.isArray(localCart)) {
+            // Handle case where cart might be stored as an array
+            setCartItems(localCart);
           } else if (localCart && typeof localCart === 'object' && !Array.isArray(localCart)) {
             // Handle case where cart might be stored without 'items' property
             setCartItems(localCart.items || []);
@@ -46,8 +49,13 @@ function Cart() {
           if (cartData && Array.isArray(cartData.items)) {
             setCartItems(cartData.items);
             
-            // Save to local storage
-            localStorage.setItem('cart', JSON.stringify(cartData));
+            // Save to local storage with consistent structure
+            localStorage.setItem('cart', JSON.stringify({ items: cartData.items }));
+          } else if (cartData && Array.isArray(cartData)) {
+            setCartItems(cartData);
+            
+            // Save to local storage with consistent structure
+            localStorage.setItem('cart', JSON.stringify({ items: cartData }));
           }
         } catch (serverError) {
           console.error('Error fetching cart from server:', serverError);
@@ -55,12 +63,11 @@ function Cart() {
         }
       }
       
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      setError('Failed to load cart. Please try again.');
-    } finally {
       setLoading(false);
+    } catch (error) {
+      console.error('Error in fetchCart:', error);
+      setLoading(false);
+      setError('Failed to load cart. Please try again.');
     }
   };
 

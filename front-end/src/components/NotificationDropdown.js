@@ -57,16 +57,16 @@ function NotificationDropdown({ onClose }) {
         {notifications.length > 0 ? (
           notifications.map(notification => (
             <div 
-              key={notification.id} 
+              key={notification._id} 
               className={`notification-item ${notification.read ? '' : 'unread'}`}
-              onClick={() => handleNotificationClick(notification.id)}
+              onClick={() => handleNotificationClick(notification._id)}
             >
               <div className={`notification-icon ${notification.type}`}>
                 <i className={getIconClass(notification.type)}></i>
               </div>
               <div className="notification-content">
                 <p className="notification-message">{notification.message}</p>
-                <span className="notification-time">{formatTime(notification.time)}</span>
+                <span className="notification-time">{formatTime(notification.createdAt)}</span>
               </div>
               {!notification.read && <div className="unread-indicator"></div>}
             </div>

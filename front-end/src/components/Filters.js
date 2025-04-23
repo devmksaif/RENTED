@@ -1,8 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/Filters.css';
 
-function Filters({ filters, onFilterChange, onResetFilters }) {
+function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect }) {
   const categories = ['All', 'Electronics', 'Furniture', 'Tools', 'Vehicles', 'Clothing', 'Sports'];
+  const [locationInput, setLocationInput] = useState(filters.location || '');
+  
+  // Default coordinates for New York City
+  const DEFAULT_COORDS = {
+    latitude: 40.7128,
+    longitude: -74.0060
+  };
+  
+  // Handle location input change
+  const handleLocationInputChange = (e) => {
+    setLocationInput(e.target.value);
+  };
+  
+  // Handle location search
+  const handleLocationSearch = (e) => {
+    e.preventDefault();
+    onFilterChange('location', locationInput);
+    
+    // Clear location coordinates if text field is emptied
+    if (!locationInput.trim()) {
+      onLocationSelect && onLocationSelect(null);
+    } else {
+      // This would typically call a geocoding service to get coordinates for the location
+      // For demo purposes, we're just passing default coordinates with the entered label
+      onLocationSelect && onLocationSelect({
+        label: locationInput,
+        // In a real app, these would come from geocoding the input address
+        latitude: DEFAULT_COORDS.latitude,
+        longitude: DEFAULT_COORDS.longitude
+      });
+    }
+  };
   
   return (
     <div className="filters-container">
@@ -47,15 +79,37 @@ function Filters({ filters, onFilterChange, onResetFilters }) {
       
       <div className="filter-section">
         <h4>Location</h4>
-        <div className="location-input-wrapper">
-          <i className="fas fa-map-marker-alt"></i>
+        <form className="location-search-form" onSubmit={handleLocationSearch}>
+          <div className="location-input-wrapper">
+            <i className="fas fa-map-marker-alt"></i>
+            <input 
+              type="text" 
+              placeholder="Enter city, address or area" 
+              value={locationInput} 
+              onChange={handleLocationInputChange}
+              className="filter-input"
+            />
+            <button type="submit" className="location-search-button">
+              <i className="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+        
+        <div className="radius-filter">
+          <h5>Search Radius: <span>{filters.radius || 10} km</span></h5>
           <input 
-            type="text" 
-            placeholder="Enter location" 
-            value={filters.location} 
-            onChange={(e) => onFilterChange('location', e.target.value)}
-            className="filter-input"
+            type="range" 
+            min="1" 
+            max="50" 
+            value={filters.radius || 10} 
+            onChange={(e) => onFilterChange('radius', e.target.value)}
+            className="filter-range"
+            disabled={!filters.location}
           />
+          <div className="range-labels">
+            <span>1km</span>
+            <span>50km</span>
+          </div>
         </div>
       </div>
       

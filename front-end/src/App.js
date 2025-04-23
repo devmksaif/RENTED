@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Update the imports to include saveCart and clearCart
-import { getCart, saveCart, clearCart as clearCartFromServer, getProducts } from './services/api';
+import { getCart, saveCart, clearCart as clearCartFromServer, getProducts, getNearbyProducts } from './services/api';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
@@ -16,11 +16,10 @@ import ProductDetail from './components/ProductDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import UserProfile from './pages/UserProfile';
 import BookingsList from './pages/BookingsList';
+import BookingDetail from './pages/BookingDetail';
 import ListingsList from './pages/ListingsList';
 import CreateListing from './pages/CreateListing';
 import { NotificationProvider } from './context/NotificationContext';
-// Remove this duplicate import
-// import { getProducts } from './services/api';
 import Checkout from './pages/Checkout';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 
@@ -37,10 +36,16 @@ const AdminRoute = ({ children }) => {
   return isAuthenticated && user.role === 'admin' ? children : <Navigate to="/" />;
 };
 
+// Renter only route component
+const RenterRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return isAuthenticated && (user.accountType === 'renter' || user.accountType === 'both') 
+    ? children 
+    : <Navigate to="/" />;
+};
 
 function App() {
-
-  
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -49,19 +54,64 @@ function App() {
     priceRange: 50,
     location: '',
     availability: '',
-    rating: ''
+    rating: '',
+    radius: 10
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [cartLength , setCartLength] = useState(0);
+  const [cartLength, setCartLength] = useState(0);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyProducts, setNearbyProducts] = useState([]);
+  const [searchRadius, setSearchRadius] = useState(10);
+  const [filterLocation, setFilterLocation] = useState(null);
+  const [filterRadius, setFilterRadius] = useState(10);
+
+  // Handler for location selection from Filters
+  const handleLocationSelect = (location) => {
+    setFilterLocation(location);
+  };
+
   useEffect(() => {
     const cartData = localStorage.getItem('cart');
     if (cartData) {
       setCartLength(JSON.parse(cartData).items.length || 0);
     }
+    
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          setUserLocation(location);
+          fetchNearbyProducts(location.latitude, location.longitude, searchRadius);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
   }, []);
+  
+  // Function to fetch nearby products
+  const fetchNearbyProducts = async (latitude, longitude, radius) => {
+    try {
+      setIsLoading(true);
+      const data = await getNearbyProducts(latitude, longitude, radius);
+      setNearbyProducts(data);
+      // Set filtered products to nearby products as default
+      setFilteredProducts(data);
+    } catch (error) {
+      console.error('Error fetching nearby products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Add a function to check backend connection
   const checkBackendConnection = async () => {
     try {
@@ -88,11 +138,8 @@ function App() {
     // Fetch products from backend
     fetchProducts();
   }, []);
-
- 
   
   // Update cart sync logic
-  // Add this to the useEffect section where you're syncing the cart
   useEffect(() => {
     const syncCart = async () => {
       try {
@@ -237,9 +284,11 @@ function App() {
       console.error('Error clearing cart:', error);
     }
   };
+  
   // Use useCallback to memoize the applyFilters function
   const applyFilters = React.useCallback(() => {
-    let filtered = [...products];
+    // Start with all products
+    let filtered = products;
     
     // Apply category filter
     if (filters.category) {
@@ -284,14 +333,18 @@ function App() {
   useEffect(() => {
     // Apply filters when filter state or search query changes
     applyFilters();
-  }, [filters, products, searchQuery, applyFilters]); // Added applyFilters to dependency array
+  }, [filters, products, searchQuery, nearbyProducts, applyFilters]); // Added dependencies
   
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
       const data = await getProducts(); // Using the API service instead of direct fetch
       setProducts(data);
-      setFilteredProducts(data);
+      
+      // If we already have nearby products, don't override
+      if (!nearbyProducts.length) {
+        setFilteredProducts(data);
+      }
     } catch (err) {
       console.error('Error fetching products:', err);
       setError('Failed to load products. Please try again.'); // Now using setError
@@ -300,9 +353,19 @@ function App() {
     }
   };
   
+  // Handle radius change for nearby products
+  const handleRadiusChange = (radius) => {
+    setSearchRadius(radius);
+    if (userLocation) {
+      fetchNearbyProducts(userLocation.latitude, userLocation.longitude, radius);
+    }
+  };
   
   // Remove the second addToCart declaration and keep only the async version
   const handleFilterChange = (filterName, value) => {
+    if (filterName === 'radius') {
+      setFilterRadius(value);
+    }
     setFilters({
       ...filters,
       [filterName]: value
@@ -315,9 +378,12 @@ function App() {
       priceRange: 50,
       location: '',
       availability: '',
-      rating: ''
+      rating: '',
+      radius: 10
     });
     setSearchQuery('');
+    setFilterLocation(null);
+    setFilterRadius(10);
   };
   
   const handleSearch = async (query) => {
@@ -326,7 +392,6 @@ function App() {
     try {
       setIsLoading(true);
       if (query.trim() === '') {
-        // If search is cleared, reset to all products
         setFilteredProducts(products);
       } else {
         // Use the backend search endpoint
@@ -352,8 +417,6 @@ function App() {
       category
     });
   };
-  
-  // Remove duplicate cart functions since we already have the async versions above
   
   return (
     <Router>
@@ -418,6 +481,14 @@ function App() {
               </ProtectedRoute>
             } />
             
+            <Route path="/booking/:id" element={
+              <ProtectedRoute>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <BookingDetail />
+                <Footer />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/listings" element={
               <ProtectedRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
@@ -426,13 +497,13 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Add route for creating listings */}
+            {/* Add route for creating listings - restrict to renters only */}
             <Route path="/listings/create" element={
-              <ProtectedRoute>
+              <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <CreateListing />
                 <Footer />
-              </ProtectedRoute>
+              </RenterRoute>
             } />
             
             {/* Admin Routes */}
@@ -453,11 +524,13 @@ function App() {
       </div>
       <div className="container">
         <div className="main-content">
-          <Filters 
-            filters={filters} 
-            onFilterChange={handleFilterChange} 
-            onResetFilters={resetFilters} 
-          />
+        <Filters 
+  filters={filters}
+  onFilterChange={handleFilterChange}
+  onResetFilters={resetFilters}
+  userLocation={userLocation}
+  onLocationSelect={handleLocationSelect}
+/>
           {isLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
@@ -473,7 +546,19 @@ function App() {
                   </button>
                 </div>
               )}
-              <ProductList products={filteredProducts} />
+              
+              <ProductList 
+                products={products}
+                onAddToCart={addToCart}
+                filterLocation={filterLocation}
+                filterRadius={filterRadius}
+              />
+              
+              <div className="payment-notice">
+                <i className="fas fa-handshake"></i>
+                <p>All payments are made hand-to-hand when you receive the item.</p>
+                <p>Bookings must be validated by the renter before you can collect the item.</p>
+              </div>
             </div>
           )}
         </div>

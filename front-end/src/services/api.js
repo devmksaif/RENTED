@@ -209,6 +209,12 @@ export const saveCart = async (cartData) => {
           console.error('Error fetching product details:', error);
         }
       }
+    } else if (Array.isArray(cartData)) {
+      // If cartData is an array, replace the entire cart
+      localCart.items = cartData;
+    } else if (cartData.items && Array.isArray(cartData.items)) {
+      // If cartData has an items array, use that
+      localCart.items = cartData.items;
     }
     
     // Save to local storage
@@ -231,7 +237,19 @@ export const saveCart = async (cartData) => {
           );
         } else {
           // Full cart update
-          // Implementation depends on your backend API
+          // Format items for the backend API
+          const items = Array.isArray(cartData) ? cartData : 
+                     (cartData.items && Array.isArray(cartData.items)) ? cartData.items : 
+                     localCart.items;
+          
+          const formattedItems = items.map(item => ({
+            productId: item.product?._id || item.product,
+            quantity: item.quantity || 1,
+            price: item.price,
+            duration: item.duration || 7
+          }));
+          
+          await updateCart({ items: formattedItems });
         }
       } catch (error) {
         console.error('Error syncing cart with server:', error);
@@ -249,12 +267,58 @@ export const saveCart = async (cartData) => {
 // Booking APIs
 export const createBooking = async (bookingData) => {
   try {
-    const response = await axios.post(`${API_URL}/bookings`, bookingData, {
+    // Ensure all required fields are present
+    if (!bookingData.productId) {
+      throw new Error('Product ID is required');
+    }
+
+    if (!bookingData.startDate || !bookingData.endDate) {
+      throw new Error('Start and end dates are required');
+    }
+
+    // Create a copy of the booking data to avoid mutating the original
+    const processedBookingData = { ...bookingData };
+    
+    // Convert dates to ISO string if they are Date objects
+    if (processedBookingData.startDate instanceof Date) {
+      processedBookingData.startDate = processedBookingData.startDate.toISOString();
+    }
+    
+    if (processedBookingData.endDate instanceof Date) {
+      processedBookingData.endDate = processedBookingData.endDate.toISOString();
+    }
+
+    // Ensure quantity is at least 1
+    if (!processedBookingData.quantity || processedBookingData.quantity < 1) {
+      processedBookingData.quantity = 1;
+    }
+
+    // Ensure paymentMethod is one of the accepted values
+    const validPaymentMethods = ['credit-card', 'paypal', 'apple-pay', 'google-pay', 'cash-on-delivery'];
+    if (!validPaymentMethods.includes(processedBookingData.paymentMethod)) {
+      processedBookingData.paymentMethod = 'cash-on-delivery'; // Default to cash on delivery
+    }
+
+    console.log('Sending booking data to API:', processedBookingData);
+    
+    const response = await axios.post(`${API_URL}/bookings/create`, processedBookingData, {
       headers: getAuthHeader()
     });
+    
     return response.data;
   } catch (error) {
     console.error('Error creating booking:', error);
+    
+    // Enhanced error information
+    if (error.response) {
+      const errorMessage = error.response.data?.message || 'Server error occurred during booking creation';
+      const enhancedError = new Error(errorMessage);
+      enhancedError.response = error.response;
+      throw enhancedError;
+    } else if (error.request) {
+      throw new Error('Network error during booking creation. Please try again.');
+    }
+    
     throw error;
   }
 };
@@ -322,12 +386,47 @@ export const cancelBooking = async (id, reason) => {
 // Payment APIs
 export const processPayment = async (paymentData) => {
   try {
-    const response = await axios.post(`${API_URL}/payments/process`, paymentData, {
-      headers: getAuthHeader()
+    // Validate required fields
+    if (!paymentData.bookingIds || !Array.isArray(paymentData.bookingIds) || paymentData.bookingIds.length === 0) {
+      throw new Error('No booking IDs provided for payment processing');
+    }
+    
+    if (!paymentData.paymentMethod) {
+      throw new Error('Payment method is required');
+    }
+    
+    if (!paymentData.amount || isNaN(paymentData.amount) || paymentData.amount <= 0) {
+      throw new Error('Valid payment amount is required');
+    }
+    
+    // Make sure payment method is one of the accepted values
+    const validPaymentMethods = ['credit-card', 'paypal', 'apple-pay', 'google-pay', 'cash-on-delivery'];
+    if (!validPaymentMethods.includes(paymentData.paymentMethod)) {
+      throw new Error('Invalid payment method');
+    }
+    
+    const response = await axios.post(`${API_URL}/bookings/payment`, paymentData, {
+      headers: getAuthHeader(),
+      timeout: 15000 // Add a reasonable timeout
     });
+    
     return response.data;
   } catch (error) {
     console.error('Error processing payment:', error);
+    
+    // Enhance error information for better handling in the UI
+    if (error.response) {
+      // The server responded with an error status
+      const errorMessage = error.response.data?.message || 'Payment processing failed';
+      const enhancedError = new Error(errorMessage);
+      enhancedError.response = error.response;
+      throw enhancedError;
+    } else if (error.request) {
+      // The request was made but no response received (network issues)
+      throw new Error('Network error during payment processing. Please try again.');
+    }
+    
+    // For other errors, rethrow
     throw error;
   }
 };
@@ -428,7 +527,7 @@ export const deleteReview = async (id) => {
 };
 
 // Notification APIs
-export const getUserNotifications = async () => {
+export const getNotifications = async () => {
   try {
     const response = await axios.get(`${API_URL}/notifications`, {
       headers: getAuthHeader()
@@ -436,13 +535,13 @@ export const getUserNotifications = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    throw error;
+    return [];
   }
 };
 
-export const markNotificationAsRead = async (id) => {
+export const markNotificationAsRead = async (notificationId) => {
   try {
-    const response = await axios.patch(`${API_URL}/notifications/${id}/read`, {}, {
+    const response = await axios.patch(`${API_URL}/notifications/${notificationId}/read`, {}, {
       headers: getAuthHeader()
     });
     return response.data;
@@ -464,9 +563,9 @@ export const markAllNotificationsAsRead = async () => {
   }
 };
 
-export const deleteNotification = async (id) => {
+export const deleteNotification = async (notificationId) => {
   try {
-    const response = await axios.delete(`${API_URL}/notifications/${id}`, {
+    const response = await axios.delete(`${API_URL}/notifications/${notificationId}`, {
       headers: getAuthHeader()
     });
     return response.data;
@@ -497,6 +596,7 @@ export const loginUser = async (credentials) => {
   }
 };
 
+// User Profile APIs
 export const getUserProfile = async () => {
   try {
     const response = await axios.get(`${API_URL}/users/profile`, {
@@ -517,6 +617,18 @@ export const updateUserProfile = async (userData) => {
     return response.data;
   } catch (error) {
     console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+export const updateUserMeetingArea = async (meetingAreaData) => {
+  try {
+    const response = await axios.post(`${API_URL}/users/meeting-areas`, meetingAreaData, {
+      headers: getAuthHeader()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating meeting area:', error);
     throw error;
   }
 };
@@ -612,8 +724,6 @@ export const adminDeleteProduct = async (id) => {
   }
 };
 
-// Add the missing exports that are causing errors
-
 // For Cart.js
 export const updateCart = async (cartData) => {
   try {
@@ -628,10 +738,7 @@ export const updateCart = async (cartData) => {
 };
 
 // For NotificationContext.js
-export const getNotifications = async () => {
-  // This is an alias for getUserNotifications for backward compatibility
-  return getUserNotifications();
-};
+ 
 
 // For AdminDashboard.js
 export const getAdminProducts = async () => {
@@ -664,6 +771,79 @@ export const getUserListings = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching user listings:', error);
+    throw error;
+  }
+};
+
+// Add this function to get nearby products
+export const getNearbyProducts = async (latitude, longitude, radius = 10, filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams({
+      lat: latitude,
+      lng: longitude,
+      radius
+    });
+    
+    // Add additional filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const response = await axios.get(`${API_URL}/products/nearby?${queryParams}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching nearby products:', error);
+    throw error;
+  }
+};
+
+// Add geocoding function
+export const geocodeLocation = async (address) => {
+  try {
+    // You could use a third-party geocoding service here
+    // For this example, we'll use OpenStreetMap Nominatim API
+    const response = await axios.get(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'RENTED App'
+        }
+      }
+    );
+    
+    if (response.data && response.data.length > 0) {
+      const result = response.data[0];
+      return {
+        latitude: parseFloat(result.lat),
+        longitude: parseFloat(result.lon),
+        displayName: result.display_name
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    throw error;
+  }
+};
+
+// Add reverse geocoding function
+export const reverseGeocode = async (latitude, longitude) => {
+  try {
+    const response = await axios.get(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      {
+        headers: {
+          'User-Agent': 'RENTED App'
+        }
+      }
+    );
+    
+    if (response.data) {
+      return response.data.display_name;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error reverse geocoding:', error);
     throw error;
   }
 };

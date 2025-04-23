@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const meetingAreaSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  latitude: {
+    type: Number,
+    required: true
+  },
+  longitude: {
+    type: Number,
+    required: true
+  }
+}, { _id: false });
+
 const bookingSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,9 +59,7 @@ const bookingSchema = new mongoose.Schema({
     enum: ['credit-card', 'paypal', 'apple-pay', 'google-pay', 'cash-on-delivery'],
     default: 'cash-on-delivery'
   },
-  shippingAddress: {
-    type: String
-  }
+  meetingArea: meetingAreaSchema
 }, {
   timestamps: true
 });

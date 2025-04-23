@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getCart, createBooking, processPayment, clearCart } from '../services/api';
+import { getCart, createBooking, processPayment, clearCart, getProductById } from '../services/api';
 import '../styles/Checkout.css';
 
 function Checkout() {
@@ -21,6 +21,8 @@ function Checkout() {
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Review
   const [loadingCart, setLoadingCart] = useState(true);
+  const [deliveryDate, setDeliveryDate] = useState(null);
+  const [cardType, setCardType] = useState('');
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -28,6 +30,9 @@ function Checkout() {
         setLoadingCart(true);
         const cartData = await getCart();
         setCartItems(cartData.items || []);
+        
+        // Log cart items for debugging
+        console.log('Cart items loaded:', cartData.items);
         
         // Redirect if cart is empty
         if (!cartData.items || cartData.items.length === 0) {
@@ -108,17 +113,50 @@ function Checkout() {
     window.scrollTo(0, 0);
   };
   
-  // Add validation functions
+  // Update the validateShippingInfo function with more comprehensive validation
   const validateShippingInfo = () => {
+    const errors = [];
     const { firstName, lastName, email, address, city, state, zipCode } = formData;
-    if (!firstName || !lastName || !email || !address || !city || !state || !zipCode) {
-      setError('Please fill in all shipping information fields');
+    
+    // Check for empty fields
+    if (!firstName.trim()) errors.push('First name is required');
+    if (!lastName.trim()) errors.push('Last name is required');
+    if (!email.trim()) errors.push('Email is required');
+    if (!address.trim()) errors.push('Address is required');
+    if (!city.trim()) errors.push('City is required');
+    if (!state.trim()) errors.push('State is required');
+    if (!zipCode.trim()) errors.push('Zip code is required');
+    if (!deliveryDate) errors.push('Delivery date is required');
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) {
+      errors.push('Please enter a valid email address');
+    }
+    
+    // Zip code validation (US format - can be adjusted for other countries)
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    if (zipCode && !zipRegex.test(zipCode)) {
+      errors.push('Please enter a valid zip code (e.g., 12345 or 12345-6789)');
+    }
+    
+    // Validate delivery date
+    if (deliveryDate) {
+      const selectedDate = new Date(deliveryDate);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrow) {
+        errors.push('Delivery date must be tomorrow or later');
+      }
+    }
+    
+    if (errors.length > 0) {
+      setError(errors.join('. '));
       return false;
     }
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address');
-      return false;
-    }
+    
     setError(null);
     return true;
   };
@@ -129,42 +167,191 @@ function Checkout() {
       return true;
     }
     
-    // Add validation for other payment methods if needed
+    // For credit card, validate card details
+    if (formData.paymentMethod === 'credit-card') {
+      const errors = [];
+      const { cardNumber, expiryDate, cvv, nameOnCard } = formData;
+      
+      // Check required fields
+      if (!cardNumber) errors.push('Card number is required');
+      if (!expiryDate) errors.push('Expiry date is required');
+      if (!cvv) errors.push('CVV is required');
+      if (!nameOnCard) errors.push('Name on card is required');
+      
+      // Basic format validation
+      if (cardNumber && !/^\d{13,19}$/.test(cardNumber.replace(/\s/g, ''))) {
+        errors.push('Please enter a valid card number');
+      }
+      
+      if (expiryDate && !/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiryDate)) {
+        errors.push('Expiry date must be in MM/YY format');
+      }
+      
+      if (cvv && !/^\d{3,4}$/.test(cvv)) {
+        errors.push('CVV must be 3 or 4 digits');
+      }
+      
+      if (errors.length > 0) {
+        setError(errors.join('. '));
+        return false;
+      }
+    }
+    
     setError(null);
     return true;
   };
 
+  const getMinDeliveryDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
+  const detectCardType = (number) => {
+    // Card type patterns
+    const patterns = {
+      visa: /^4/,
+      mastercard: /^5[1-5]/,
+      amex: /^3[47]/,
+      discover: /^6(?:011|5)/,
+    };
+    
+    // Remove spaces and dashes
+    const cardNumber = number.replace(/[\s-]/g, '');
+    
+    // Check each pattern
+    if (patterns.visa.test(cardNumber)) return 'visa';
+    if (patterns.mastercard.test(cardNumber)) return 'mastercard';
+    if (patterns.amex.test(cardNumber)) return 'amex';
+    if (patterns.discover.test(cardNumber)) return 'discover';
+    
+    return '';
+  };
+
+  // Update the checkProductAvailability function to log more details
+  const checkProductAvailability = async (productId) => {
+    try {
+      const product = await getProductById(productId);
+      console.log(`Checking availability for product ${productId}:`, product.title, product.availability);
+      
+      if (product.availability !== 'Available') {
+        console.warn(`Product ${product.title} is not available: ${product.availability}`);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking product availability:', error);
+      return false;
+    }
+  };
+
+  // Update handleSubmit to better handle date conversions with time zones
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-  
+
     try {
+      // Validate form data before proceeding
+      if (!validateShippingInfo() || !validatePaymentInfo()) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Check availability for all products first
+      const unavailableProducts = [];
+      for (const item of cartItems) {
+        const isAvailable = await checkProductAvailability(item.product._id);
+        if (!isAvailable) {
+          unavailableProducts.push({
+            id: item.product._id,
+            title: item.product.title
+          });
+        }
+      }
+
+      // If any products are unavailable, show error and stop
+      if (unavailableProducts.length > 0) {
+        const productTitles = unavailableProducts.map(p => p.title).join(', ');
+        throw new Error(`The following items are no longer available: ${productTitles}. Please remove them from your cart and try again.`);
+      }
+
       // Create bookings for each cart item
-      const bookingPromises = cartItems.map(item => {
-        // Set start date to tomorrow to avoid "Start date cannot be in the past" error
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() + 1); // Start date is tomorrow
-        
-        const endDate = new Date(startDate); // Create a new date based on start date
-        endDate.setDate(startDate.getDate() + (item.duration || 7)); // Add duration days to start date
-        
-        return createBooking({
-          productId: item.product._id,
-          startDate,
-          endDate,
-          quantity: item.quantity,
-          totalPrice: item.price * item.quantity * (item.duration || 7),
-          paymentMethod: formData.paymentMethod,
-          shippingAddress: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}`
-        });
-      });
-      
-      const bookings = await Promise.all(bookingPromises);
-      
-      // Process payment for all bookings
+      const bookingResults = [];
+      const failedBookings = [];
+
+      // Create bookings one by one to better handle potential failures
+      for (const item of cartItems) {
+        try {
+          // Parse the delivery date or use tomorrow as default
+          let startDate = deliveryDate ? new Date(deliveryDate) : new Date();
+          if (!deliveryDate) {
+            startDate.setDate(startDate.getDate() + 1);
+          }
+          
+          // Set to beginning of day in local timezone
+          startDate = new Date(startDate.setHours(0, 0, 0, 0));
+          
+          // Calculate end date properly 
+          const duration = item.duration || 7;
+          let endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + duration);
+          endDate = new Date(endDate.setHours(23, 59, 59, 999));
+          
+          // Format dates as ISO strings for the API
+          const startDateISO = startDate.toISOString();
+          const endDateISO = endDate.toISOString();
+          
+          // Create shipping address with proper formatting
+          const shippingAddress = `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city}, ${formData.state}, ${formData.zipCode}`;
+          
+          // Calculate total price
+          const totalPrice = parseFloat((item.price * item.quantity * duration).toFixed(2));
+          
+          const bookingData = {
+            productId: item.product._id,
+            startDate: startDateISO,
+            endDate: endDateISO,
+            quantity: item.quantity,
+            totalPrice,
+            paymentMethod: formData.paymentMethod,
+            shippingAddress
+          };
+          
+          console.log(`Creating booking for ${item.product.title}:`, bookingData);
+          
+          const booking = await createBooking(bookingData);
+          bookingResults.push(booking);
+        } catch (bookingError) {
+          console.error('Error creating booking for item:', item.product.title, bookingError);
+          
+          // Extract detailed error message
+          const errorMessage = 
+            bookingError.response?.data?.message || 
+            bookingError.message || 
+            'Failed to create booking';
+          
+          failedBookings.push({
+            item: item,
+            error: errorMessage
+          });
+        }
+      }
+
+      // If all bookings failed, show error and stop
+      if (bookingResults.length === 0) {
+        if (failedBookings.length > 0) {
+          const mostCommonError = getMostCommonError(failedBookings);
+          throw new Error(`Booking failed: ${mostCommonError}`);
+        } else {
+          throw new Error('Failed to create any bookings. Please try again.');
+        }
+      }
+
+      // Process payment for successful bookings
       const paymentData = {
-        bookingIds: bookings.map(booking => booking._id),
+        bookingIds: bookingResults.map(booking => booking._id),
         paymentMethod: formData.paymentMethod,
         amount: calculateTotal()
       };
@@ -177,24 +364,62 @@ function Checkout() {
       // Dispatch cart updated event to update cart count in header
       window.dispatchEvent(new Event('cartUpdated'));
       
-      // Redirect to success page
-      navigate('/checkout/success', { 
+      // Redirect to success page with appropriate data
+      navigate('/checkout-success', { 
         state: { 
-          bookings,
+          bookings: bookingResults,
           totalAmount: calculateTotal(),
-          paymentMethod: formData.paymentMethod
+          paymentMethod: formData.paymentMethod,
+          failedBookings: failedBookings.length > 0 ? failedBookings : null,
+          deliveryDate: deliveryDate || new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]
         } 
       });
     } catch (error) {
       console.error('Checkout error:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with an error status
+        const errorMessage = error.response.data?.message || 'Server error occurred during checkout';
+        setError(errorMessage);
+      } else if (error.request) {
+        // Request was made but no response received (network issue)
+        setError('Network error. Please check your internet connection and try again.');
       } else {
-        setError('Failed to complete checkout. Please try again later.');
+        // Error in setting up the request
+        setError(error.message || 'Failed to complete checkout. Please try again later.');
       }
+      
+      // Scroll to top to make error message visible
+      window.scrollTo(0, 0);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add helper function to get the most common error
+  const getMostCommonError = (failedBookings) => {
+    const errorCounts = {};
+    
+    failedBookings.forEach(booking => {
+      if (errorCounts[booking.error]) {
+        errorCounts[booking.error]++;
+      } else {
+        errorCounts[booking.error] = 1;
+      }
+    });
+    
+    let mostCommonError = 'Unknown error';
+    let maxCount = 0;
+    
+    Object.entries(errorCounts).forEach(([error, count]) => {
+      if (count > maxCount) {
+        mostCommonError = error;
+        maxCount = count;
+      }
+    });
+    
+    return mostCommonError;
   };
 
   if (loadingCart) {
@@ -220,6 +445,12 @@ function Checkout() {
             <div className="step-number">3</div>
             <div className="step-label">Review</div>
           </div>
+        </div>
+        <div className="progress-container">
+          <div 
+            className="progress-bar" 
+            style={{ width: `${(step - 1) * 50}%` }}
+          ></div>
         </div>
       </div>
 
@@ -315,6 +546,18 @@ function Checkout() {
                       />
                     </div>
                   </div>
+                  <div className="form-group">
+                    <label htmlFor="deliveryDate">Preferred Delivery Date</label>
+                    <input
+                      type="date"
+                      id="deliveryDate"
+                      min={getMinDeliveryDate()}
+                      value={deliveryDate || ''}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      required
+                    />
+                    <small className="form-text">Delivery is available starting tomorrow</small>
+                  </div>
                   <div className="form-buttons">
                     <Link to="/cart" className="back-button">
                       <i className="fas fa-arrow-left"></i> Back to Cart
@@ -380,21 +623,89 @@ function Checkout() {
                     <div className="credit-card-details">
                       <div className="form-group">
                         <label htmlFor="cardNumber">Card Number</label>
-                        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" />
+                        <div className="card-input-container">
+                          {cardType ? (
+                            <i className={`fab fa-cc-${cardType}`}></i>
+                          ) : (
+                            <i className="fas fa-credit-card"></i>
+                          )}
+                          <input 
+                            type="text" 
+                            id="cardNumber" 
+                            name="cardNumber"
+                            placeholder="1234 5678 9012 3456" 
+                            value={formData.cardNumber || ''}
+                            onChange={(e) => {
+                              // Format card number with spaces every 4 digits
+                              const value = e.target.value.replace(/\D/g, '').substring(0, 16);
+                              const formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                              setFormData({...formData, cardNumber: formattedValue});
+                              
+                              // Detect card type
+                              const detectedType = detectCardType(value);
+                              setCardType(detectedType);
+                            }}
+                            maxLength={19}
+                          />
+                        </div>
+                        {cardType && (
+                          <div className="card-type-indicator">
+                            <span>We've detected a {cardType.charAt(0).toUpperCase() + cardType.slice(1)} card</span>
+                          </div>
+                        )}
                       </div>
                       <div className="form-row">
                         <div className="form-group">
                           <label htmlFor="expiryDate">Expiry Date</label>
-                          <input type="text" id="expiryDate" placeholder="MM/YY" />
+                          <input 
+                            type="text" 
+                            id="expiryDate" 
+                            name="expiryDate"
+                            placeholder="MM/YY" 
+                            value={formData.expiryDate || ''}
+                            onChange={(e) => {
+                              // Format expiry date as MM/YY
+                              const value = e.target.value.replace(/\D/g, '').substring(0, 4);
+                              let formattedValue = value;
+                              if (value.length > 2) {
+                                formattedValue = value.slice(0, 2) + '/' + value.slice(2);
+                              }
+                              setFormData({...formData, expiryDate: formattedValue});
+                            }}
+                            maxLength={5}
+                          />
                         </div>
                         <div className="form-group">
                           <label htmlFor="cvv">CVV</label>
-                          <input type="text" id="cvv" placeholder="123" />
+                          <input 
+                            type="text" 
+                            id="cvv" 
+                            name="cvv"
+                            placeholder="123" 
+                            value={formData.cvv || ''}
+                            onChange={(e) => {
+                              // Allow only digits for CVV
+                              const value = e.target.value.replace(/\D/g, '').substring(0, 4);
+                              setFormData({...formData, cvv: value});
+                            }}
+                            maxLength={4}
+                          />
                         </div>
                       </div>
                       <div className="form-group">
                         <label htmlFor="nameOnCard">Name on Card</label>
-                        <input type="text" id="nameOnCard" placeholder="John Doe" />
+                        <input 
+                          type="text" 
+                          id="nameOnCard" 
+                          name="nameOnCard"
+                          placeholder="John Doe" 
+                          value={formData.nameOnCard || ''}
+                          onChange={(e) => setFormData({...formData, nameOnCard: e.target.value})}
+                        />
+                      </div>
+                      <div className="card-security-message">
+                        <i className="fas fa-lock"></i>
+                        <span>Your payment information is secured with SSL encryption</span>
                       </div>
                     </div>
                   )}
@@ -421,6 +732,7 @@ function Checkout() {
                       <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
                       <p><strong>Email:</strong> {formData.email}</p>
                       <p><strong>Address:</strong> {formData.address}, {formData.city}, {formData.state} {formData.zipCode}</p>
+                      <p><strong>Delivery Date:</strong> {deliveryDate ? new Date(deliveryDate).toLocaleDateString() : new Date(new Date().setDate(new Date().getDate() + 1)).toLocaleDateString()}</p>
                     </div>
                     <button className="edit-button" onClick={() => goToStep(1)}>
                       <i className="fas fa-edit"></i> Edit
@@ -499,7 +811,7 @@ function Checkout() {
                       </>
                     ) : (
                       <>
-                        Place Order <i className="fas fa-check"></i>
+                        <i className="fas fa-shopping-cart"></i> Place Order
                       </>
                     )}
                   </button>
@@ -530,7 +842,11 @@ function Checkout() {
             <div className="summary-totals">
               <div className="summary-row">
                 <span>Subtotal:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+                <span>${calculateSubtotal().toFixed(2)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Tax (8%):</span>
+                <span>${calculateTax().toFixed(2)}</span>
               </div>
               <div className="summary-row">
                 <span>Shipping:</span>
@@ -541,6 +857,47 @@ function Checkout() {
                 <span>${calculateTotal().toFixed(2)}</span>
               </div>
             </div>
+            
+            <div className="mobile-proceed-btn-container">
+              {step < 3 && (
+                <button 
+                  className="mobile-proceed-btn" 
+                  onClick={() => {
+                    if (step === 1 && validateShippingInfo()) goToStep(2);
+                    else if (step === 2 && validatePaymentInfo()) goToStep(3);
+                  }}
+                >
+                  Continue <i className="fas fa-arrow-right"></i>
+                </button>
+              )}
+              {step === 3 && (
+                <button 
+                  className="mobile-proceed-btn" 
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="button-spinner"></div> Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-shopping-cart"></i> Place Order
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="loader-overlay">
+          <div className="loader-content">
+            <div className="loader-spinner"></div>
+            <p>Processing your order...</p>
+            <p className="loader-subtitle">Please don't refresh or navigate away from this page.</p>
           </div>
         </div>
       )}

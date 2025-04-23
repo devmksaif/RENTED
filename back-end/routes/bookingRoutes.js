@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Get all bookings for a user
 router.get('/user', auth, async (req, res) => {
@@ -62,11 +63,9 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Update the create booking route
-
-// Create a new booking
-router.post('/', auth, async (req, res) => {
+router.post('/create', auth, async (req, res) => {
   try {
-    const { productId, startDate, endDate, quantity, totalPrice, paymentMethod, shippingAddress } = req.body;
+    const { productId, startDate, endDate, quantity, totalPrice, paymentMethod, meetingArea } = req.body;
     
     // Validate dates
     const start = new Date(startDate);
@@ -110,8 +109,13 @@ router.post('/', auth, async (req, res) => {
       calculatedTotalPrice = days * product.price * (quantity || 1);
     }
     
+    // Validate meeting area if provided
+    if (meetingArea && (!meetingArea.name || meetingArea.latitude === undefined || meetingArea.longitude === undefined)) {
+      return res.status(400).json({ message: 'Invalid meeting area data' });
+    }
+    
     // Create booking
-    const booking = new Booking({
+    const bookingData = {
       product: productId,
       user: req.user._id,
       startDate,
@@ -120,9 +124,31 @@ router.post('/', auth, async (req, res) => {
       totalPrice: calculatedTotalPrice,
       status: 'Pending',
       paymentStatus: paymentMethod === 'cash-on-delivery' ? 'Pending' : 'Pending',
-      shippingAddress: shippingAddress || ''
-    });
+      paymentMethod: paymentMethod || 'cash-on-delivery'
+    };
     
+    // Add meeting area if provided
+    if (meetingArea && meetingArea.name) {
+      bookingData.meetingArea = {
+        name: meetingArea.name,
+        latitude: meetingArea.latitude,
+        longitude: meetingArea.longitude
+      };
+    } else {
+      // If no meeting area is provided, check if user has a default meeting area
+      const user = await User.findById(req.user._id);
+      const defaultMeetingArea = user.meetingAreas && user.meetingAreas.find(area => area.isDefault);
+      
+      if (defaultMeetingArea) {
+        bookingData.meetingArea = {
+          name: defaultMeetingArea.name,
+          latitude: defaultMeetingArea.latitude,
+          longitude: defaultMeetingArea.longitude
+        };
+      }
+    }
+    
+    const booking = new Booking(bookingData);
     const newBooking = await booking.save();
     
     // Update product availability
@@ -145,6 +171,7 @@ router.post('/', auth, async (req, res) => {
     
     res.status(201).json(newBooking);
   } catch (error) {
+    console.error('Error creating booking:', error);
     res.status(400).json({ message: error.message });
   }
 });

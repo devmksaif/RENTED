@@ -102,17 +102,84 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Add this route for geographic search
+// Update the geographic search route
+router.get('/nearby', async (req, res) => {
+  try {
+    const { lat, lng, radius = 10, category, minPrice, maxPrice, availability, rating } = req.query;
+    
+    if (!lat || !lng) {
+      return res.status(400).json({ message: 'Latitude and longitude are required' });
+    }
+    
+    // Convert coordinates to numbers
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+    const searchRadius = parseFloat(radius); // in kilometers
+    
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(searchRadius)) {
+      return res.status(400).json({ message: 'Invalid coordinates or radius' });
+    }
+    
+    // Build the filter
+    const filter = {
+      // Geospatial query
+      geoLocation: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude] // MongoDB uses [longitude, latitude] format
+          },
+          $maxDistance: searchRadius * 1000 // Convert km to meters
+        }
+      }
+    };
+    
+    // Add optional filters
+    if (category) filter.category = category;
+    if (availability) filter.availability = availability;
+    if (rating) filter.rating = { $gte: Number(rating) };
+    
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    
+    // Find products near the given coordinates
+    const products = await Product.find(filter).limit(100); // Limit to 100 results for performance
+    
+    res.json(products);
+  } catch (error) {
+    console.error('Error finding nearby products:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create a new product (protected route)
 router.post('/', auth, async (req, res) => {
-  const product = new Product({
-    ...req.body,
-    owner: req.user._id
-  });
-
   try {
+    const productData = { ...req.body, owner: req.user._id };
+    
+    // Handle geolocation if coordinates are provided
+    if (req.body.longitude && req.body.latitude) {
+      productData.geoLocation = {
+        type: 'Point',
+        coordinates: [parseFloat(req.body.longitude), parseFloat(req.body.latitude)]
+      };
+      
+      // Remove non-schema properties
+      delete productData.longitude;
+      delete productData.latitude;
+    }
+    
+    const product = new Product(productData);
     const newProduct = await product.save();
+    
     res.status(201).json(newProduct);
   } catch (error) {
+    console.error('Error creating product:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -131,13 +198,29 @@ router.patch('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this product' });
     }
     
-    Object.keys(req.body).forEach(update => {
-      product[update] = req.body[update];
+    const updateData = { ...req.body };
+    
+    // Handle geolocation update if coordinates are provided
+    if (req.body.longitude && req.body.latitude) {
+      updateData.geoLocation = {
+        type: 'Point',
+        coordinates: [parseFloat(req.body.longitude), parseFloat(req.body.latitude)]
+      };
+      
+      // Remove non-schema properties from update
+      delete updateData.longitude;
+      delete updateData.latitude;
+    }
+    
+    // Apply updates
+    Object.keys(updateData).forEach(update => {
+      product[update] = updateData[update];
     });
     
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (error) {
+    console.error('Error updating product:', error);
     res.status(400).json({ message: error.message });
   }
 });

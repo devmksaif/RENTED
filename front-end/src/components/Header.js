@@ -82,10 +82,12 @@ function Header({ cartItemCount = 0 }) {
         
         
         <div className="header-actions">
-          <button className="action-button">
-            <i className="fas fa-plus"></i>
-            <span>List Item</span>
-          </button>
+          {isLoggedIn && (user?.accountType === 'renter' || user?.accountType === 'both') && (
+            <Link to="/listings/create" className="action-button">
+              <i className="fas fa-plus"></i>
+              <span>List Item</span>
+            </Link>
+          )}
           
           <div className="header-icons">
             <div className="notification-icon-wrapper">
