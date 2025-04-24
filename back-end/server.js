@@ -1,68 +1,57 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+const dotenv = require('dotenv');
+const productRoutes = require('./routes/productRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
-// Import routes
-const verificationRoutes = require('./routes/verification.routes');
-const userRoutes = require('./routes/user.routes');
+// Load environment variables
+dotenv.config();
 
+// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// MongoDB connection URL
-const mongoURI = 'mongodb://localhost:27017';
-const dbName = 'rented';
-
-// Connect to MongoDB
-async function connectDB() {
-  const client = new MongoClient(mongoURI);
-  
-  try {
-    await client.connect();
-    console.log('✅ Connected to MongoDB');
-    
-    const db = client.db(dbName);
-    return { db, client };
-  } catch (err) {
-    console.error('❌ Error connecting to MongoDB:', err);
-    throw err;
-  }
-}
-
-// Make DB connection available to the app
-app.locals.connectDB = connectDB;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
-app.use(cors());
+// Update CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rented', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ Error connecting to MongoDB:', err));
 
 // Routes
-app.use('/api/verification', verificationRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/cart', cartRoutes);
 
-// Serve uploaded files (for development only)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Root route
+// Default route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to RENTED API' });
+  res.send('RENTED API is running');
 });
 
-// Start the server
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
-  // In production, you might want to exit the process
-  // process.exit(1);
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

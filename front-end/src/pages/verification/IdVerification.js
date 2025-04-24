@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Verification.css';
+import '../../styles/Verification.css';
 
-const IdVerification = () => {
+function IdVerification() {
   const [idFront, setIdFront] = useState(null);
   const [idBack, setIdBack] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,18 +37,31 @@ const IdVerification = () => {
     e.preventDefault();
     
     if (!idFront || !idBack) {
-      setError('Please upload both sides of your ID');
+      setError('Please upload both front and back images of your ID');
       return;
     }
     
     setLoading(true);
     
-    // In a real implementation, you would upload these files to your server
-    // For now, we'll simulate a successful upload
-    setTimeout(() => {
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append('idFront', idFront);
+      formData.append('idBack', idBack);
+      
+      // In a real app, you would send this to your backend
+      // const response = await uploadIdImages(formData);
+      
+      // For now, we'll just simulate a successful upload
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/verify/selfie');
+      }, 1500);
+      
+    } catch (error) {
       setLoading(false);
-      navigate('/verify/selfie');
-    }, 1500);
+      setError('Failed to upload ID images. Please try again.');
+    }
   };
 
   return (
@@ -67,62 +80,84 @@ const IdVerification = () => {
           <div className="progress-step">3</div>
         </div>
         
-        <form onSubmit={handleSubmit} className="verification-form">
+        <form className="verification-form" onSubmit={handleSubmit}>
+          <div className="verification-tips">
+            <h3>Tips for a successful verification:</h3>
+            <ul>
+              <li>Use a valid government-issued ID (passport, driver's license, or national ID)</li>
+              <li>Make sure the entire document is visible in the frame</li>
+              <li>Ensure all text is clearly readable</li>
+              <li>Upload images in JPG, PNG, or PDF format (max 5MB)</li>
+            </ul>
+          </div>
+          
           <div className="upload-section">
             <div className="upload-box">
               <h3>Front of ID</h3>
-              <div className={`upload-area ${idFront ? 'has-file' : ''}`}>
+              <div className="upload-area">
                 {idFront ? (
-                  <div className="file-preview">
-                    <img src={URL.createObjectURL(idFront)} alt="ID Front" />
+                  <div className="preview-container">
+                    <img 
+                      src={URL.createObjectURL(idFront)} 
+                      alt="ID Front" 
+                      className="id-preview" 
+                    />
                     <button 
                       type="button" 
-                      className="remove-file" 
+                      className="remove-btn"
                       onClick={() => setIdFront(null)}
                     >
-                      Remove
+                      <i className="fas fa-times"></i>
                     </button>
                   </div>
                 ) : (
-                  <>
-                    <div className="upload-icon">📄</div>
-                    <p>Drag and drop or click to upload</p>
+                  <label className="upload-label">
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/png,application/pdf" 
                       onChange={handleIdFrontUpload} 
                       className="file-input"
                     />
-                  </>
+                    <div className="upload-icon">
+                      <i className="fas fa-upload"></i>
+                    </div>
+                    <span>Click to upload</span>
+                  </label>
                 )}
               </div>
             </div>
             
             <div className="upload-box">
               <h3>Back of ID</h3>
-              <div className={`upload-area ${idBack ? 'has-file' : ''}`}>
+              <div className="upload-area">
                 {idBack ? (
-                  <div className="file-preview">
-                    <img src={URL.createObjectURL(idBack)} alt="ID Back" />
+                  <div className="preview-container">
+                    <img 
+                      src={URL.createObjectURL(idBack)} 
+                      alt="ID Back" 
+                      className="id-preview" 
+                    />
                     <button 
                       type="button" 
-                      className="remove-file" 
+                      className="remove-btn"
                       onClick={() => setIdBack(null)}
                     >
-                      Remove
+                      <i className="fas fa-times"></i>
                     </button>
                   </div>
                 ) : (
-                  <>
-                    <div className="upload-icon">📄</div>
-                    <p>Drag and drop or click to upload</p>
+                  <label className="upload-label">
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/jpeg,image/png,application/pdf" 
                       onChange={handleIdBackUpload} 
                       className="file-input"
                     />
-                  </>
+                    <div className="upload-icon">
+                      <i className="fas fa-upload"></i>
+                    </div>
+                    <span>Click to upload</span>
+                  </label>
                 )}
               </div>
             </div>
@@ -130,29 +165,26 @@ const IdVerification = () => {
           
           {error && <div className="error-message">{error}</div>}
           
-          <div className="verification-tips">
-            <h3>Tips for a successful verification:</h3>
-            <ul>
-              <li>Make sure your ID is valid and not expired</li>
-              <li>Ensure all four corners of your ID are visible</li>
-              <li>Make sure the image is clear and not blurry</li>
-              <li>Acceptable ID types: Driver's License, Passport, National ID</li>
-            </ul>
-          </div>
-          
           <div className="form-actions">
             <button 
               type="submit" 
-              className="btn btn-primary" 
+              className="btn-primary"
               disabled={loading || !idFront || !idBack}
             >
-              {loading ? 'Uploading...' : 'Continue to Next Step'}
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Uploading...
+                </>
+              ) : (
+                'Continue to Next Step'
+              )}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
+}
 
 export default IdVerification;

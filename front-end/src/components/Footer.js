@@ -1,62 +1,76 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import '../styles/Footer.css';
 
-const Footer = () => {
+function Footer() {
   return (
-    <footer className="site-footer">
-      <div className="container">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <h2>RENTED</h2>
-            <p>Rent anything you need, when you need it.</p>
+    <footer className="footer">
+      <div className="footer-container">
+        <div className="footer-top">
+          <div className="footer-logo">
+            <div className="logo">
+              <span className="logo-text">RENTED</span>
+              <span className="logo-dot"></span>
+            </div>
+            <p className="footer-tagline">Rent anything you need, when you need it.</p>
           </div>
           
-          <div className="footer-links">
-            <div className="footer-column">
-              <h3>Company</h3>
-              <ul>
-                <li><Link to="/about">About Us</Link></li>
-                <li><Link to="/careers">Careers</Link></li>
-                <li><Link to="/blog">Blog</Link></li>
-                <li><Link to="/press">Press</Link></li>
+          <div className="footer-links-container">
+            <div className="footer-links-column">
+              <h4>Company</h4>
+              <ul className="footer-links">
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/careers">Careers</a></li>
+                <li><a href="/blog">Blog</a></li>
+                <li><a href="/press">Press</a></li>
               </ul>
             </div>
             
-            <div className="footer-column">
-              <h3>Support</h3>
-              <ul>
-                <li><Link to="/help">Help Center</Link></li>
-                <li><Link to="/faq">FAQ</Link></li>
-                <li><Link to="/contact">Contact Us</Link></li>
-                <li><Link to="/safety">Safety Center</Link></li>
+            <div className="footer-links-column">
+              <h4>Support</h4>
+              <ul className="footer-links">
+                <li><a href="/help">Help Center</a></li>
+                <li><a href="/faq">FAQ</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+                <li><a href="/safety">Safety Center</a></li>
               </ul>
             </div>
             
-            <div className="footer-column">
-              <h3>Legal</h3>
-              <ul>
-                <li><Link to="/terms">Terms of Service</Link></li>
-                <li><Link to="/privacy">Privacy Policy</Link></li>
-                <li><Link to="/cookies">Cookie Policy</Link></li>
-                <li><Link to="/guidelines">Community Guidelines</Link></li>
+            <div className="footer-links-column">
+              <h4>Legal</h4>
+              <ul className="footer-links">
+                <li><a href="/terms">Terms of Service</a></li>
+                <li><a href="/privacy">Privacy Policy</a></li>
+                <li><a href="/cookies">Cookie Policy</a></li>
+                <li><a href="/guidelines">Community Guidelines</a></li>
               </ul>
             </div>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <div className="social-links">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <div className="footer-social">
+            <a href="https://facebook.com" className="social-icon">
+              <i className="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://twitter.com" className="social-icon">
+              <i className="fab fa-twitter"></i>
+            </a>
+            <a href="https://instagram.com" className="social-icon">
+              <i className="fab fa-instagram"></i>
+            </a>
+            <a href="https://linkedin.com" className="social-icon">
+              <i className="fab fa-linkedin-in"></i>
+            </a>
           </div>
-          <p className="copyright">© 2023 RENTED. All rights reserved.</p>
-          <p className="contact-info">Contact: email@example.com | 123-456-7890</p>
+          
+          <div className="footer-copyright">
+            <p>© {new Date().getFullYear()} RENTED. All rights reserved.</p>
+            <p className="footer-contact">Contact: email@example.com | 123-456-7890</p>
+          </div>
         </div>
       </div>
     </footer>
   );
-};
+}
 
 export default Footer;

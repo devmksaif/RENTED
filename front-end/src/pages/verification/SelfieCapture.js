@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import './Verification.css';
+import '../../styles/Verification.css';
 
 const SelfieCapture = () => {
   const [selfieImage, setSelfieImage] = useState(null);
@@ -32,31 +32,34 @@ const SelfieCapture = () => {
     
     setLoading(true);
     
-    // In a real implementation, you would upload the selfie to your server
-    // For now, we'll simulate a successful upload
-    setTimeout(() => {
+    try {
+      // In a real app, you would send this to your backend
+      // const response = await uploadSelfie(selfieImage);
+      
+      // For now, we'll just simulate a successful upload
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/verify/processing');
+      }, 1500);
+      
+    } catch (error) {
       setLoading(false);
-      navigate('/verify/processing');
-    }, 1500);
+      alert('Failed to upload selfie. Please try again.');
+    }
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelfieImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const videoConstraints = {
+    width: 720,
+    height: 720,
+    facingMode: "user"
   };
 
   return (
     <div className="verification-container">
       <div className="verification-card">
         <div className="verification-header">
-          <h1>Selfie Verification</h1>
-          <p>Step 2 of 3: Take a selfie for identity verification</p>
+          <h1>Take a Selfie</h1>
+          <p>Step 2 of 3: We need to verify that you match your ID</p>
         </div>
         
         <div className="verification-progress">
@@ -67,35 +70,34 @@ const SelfieCapture = () => {
           <div className="progress-step">3</div>
         </div>
         
-        <div className="verification-form">
-          <div className="selfie-section">
-            {selfieImage ? (
-              <div className="selfie-preview">
-                <img src={selfieImage} alt="Selfie" />
+        <form className="verification-form" onSubmit={handleSubmit}>
+          <div className="verification-tips">
+            <h3>Tips for a successful selfie:</h3>
+            <ul>
+              <li>Make sure your face is clearly visible</li>
+              <li>Remove sunglasses or any face coverings</li>
+              <li>Ensure you're in a well-lit environment</li>
+              <li>Look directly at the camera</li>
+            </ul>
+          </div>
+          
+          <div className="selfie-capture-area">
+            {cameraError ? (
+              <div className="camera-error">
+                <i className="fas fa-exclamation-triangle"></i>
+                <h3>Camera access denied</h3>
+                <p>Please allow camera access to continue with verification</p>
                 <button 
                   type="button" 
-                  className="btn btn-secondary" 
-                  onClick={retake}
+                  className="btn-secondary"
+                  onClick={() => window.location.reload()}
                 >
-                  Retake Selfie
+                  Try Again
                 </button>
               </div>
-            ) : cameraError ? (
-              <div className="camera-error">
-                <div className="error-icon">❌</div>
-                <h3>Camera access denied or not available</h3>
-                <p>Please allow camera access or upload a selfie manually</p>
-                <div className="manual-upload">
-                  <label className="btn btn-secondary">
-                    Upload Selfie
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleFileUpload} 
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
+            ) : selfieImage ? (
+              <div className="selfie-preview">
+                <img src={selfieImage} alt="Selfie" />
               </div>
             ) : (
               <div className="webcam-container">
@@ -103,44 +105,52 @@ const SelfieCapture = () => {
                   audio={false}
                   ref={webcamRef}
                   screenshotFormat="image/jpeg"
-                  videoConstraints={{
-                    facingMode: "user"
-                  }}
+                  videoConstraints={videoConstraints}
                   onUserMediaError={handleCameraError}
+                  mirrored={true}
                   className="webcam"
                 />
-                <button 
-                  type="button" 
-                  className="capture-btn" 
-                  onClick={capture}
-                >
-                  Take Selfie
-                </button>
               </div>
             )}
           </div>
           
-          <div className="verification-tips">
-            <h3>Tips for a successful selfie verification:</h3>
-            <ul>
-              <li>Make sure your face is clearly visible</li>
-              <li>Ensure good lighting conditions</li>
-              <li>Remove sunglasses, hats, or other face coverings</li>
-              <li>Look directly at the camera</li>
-            </ul>
-          </div>
-          
           <div className="form-actions">
-            <button 
-              type="button" 
-              className="btn btn-primary" 
-              disabled={loading || !selfieImage}
-              onClick={handleSubmit}
-            >
-              {loading ? 'Uploading...' : 'Submit Verification'}
-            </button>
+            {selfieImage ? (
+              <>
+                <button 
+                  type="button" 
+                  className="btn-secondary"
+                  onClick={retake}
+                >
+                  Retake Photo
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner"></span>
+                      Uploading...
+                    </>
+                  ) : (
+                    'Continue to Next Step'
+                  )}
+                </button>
+              </>
+            ) : (
+              <button 
+                type="button" 
+                className="btn-primary capture-btn"
+                onClick={capture}
+              >
+                <i className="fas fa-camera"></i>
+                Take Photo
+              </button>
+            )}
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

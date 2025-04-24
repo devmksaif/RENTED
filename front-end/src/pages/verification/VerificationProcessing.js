@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Verification.css';
+import '../../styles/Verification.css';
 
 const VerificationProcessing = () => {
   const navigate = useNavigate();
@@ -31,11 +31,11 @@ const VerificationProcessing = () => {
         </div>
         
         <div className="processing-content">
-          <div className="loading-animation">
-            <div className="spinner"></div>
+          <div className="processing-animation">
+            <div className="spinner-large"></div>
           </div>
           <h2>Please wait while we process your information</h2>
-          <p>This may take a few moments. Please do not close this page.</p>
+          <p>This will only take a moment...</p>
         </div>
       </div>
     </div>
