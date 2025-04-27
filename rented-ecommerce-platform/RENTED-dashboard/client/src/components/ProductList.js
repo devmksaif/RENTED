@@ -254,7 +254,7 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
                 value={searchRadius}
                 onChange={handleRadiusChange}
                 className="radius-slider"
-                disabled={!searchLocation}
+                
               />
               <span className="radius-value">{searchRadius} km</span>
             </div>

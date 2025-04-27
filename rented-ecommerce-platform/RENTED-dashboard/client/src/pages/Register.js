@@ -662,14 +662,14 @@ const handleSearchResultClick = (result) => {
             <i className="fas fa-search search-icon"></i>
             <input
               type="text"
-              className="location-search-input"
+              className="location-search-input-order"
               placeholder="Search for a location or address"
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
             <button 
               type="button" 
-              className="location-search-button"
+              className="location-search-button-order"
               onClick={handleLocationSearch}
               disabled={isSearching || searchQuery.length < 3}
               title="Search for this location"
