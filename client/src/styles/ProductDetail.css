@@ -600,7 +600,7 @@
   font-weight: 500;
 }
 
-/* .add-to-cart-btn {
+.add-to-cart-btn {
   flex: 1;
   padding: 12px;
   background-color: #4caf50;
@@ -624,7 +624,7 @@
 .add-to-cart-btn:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-} */
+}
 
 .date-required-message {
   color: #f44336;
