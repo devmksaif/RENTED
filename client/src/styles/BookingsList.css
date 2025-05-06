@@ -32,8 +32,8 @@
 }
 
 .tab-button.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
+  color: #4caf50;
+  border-bottom-color: #4caf50;
   font-weight: 500;
 }
 
@@ -98,7 +98,7 @@
 
 .browse-button {
   display: inline-block;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   text-decoration: none;
   padding: 0.8rem 1.5rem;
@@ -108,7 +108,7 @@
 }
 
 .browse-button:hover {
-  background-color: #388E3C;
+  background-color: #388e3c;
 }
 
 .bookings-list {
@@ -156,15 +156,17 @@
   margin-bottom: 1rem;
 }
 
-.booking-dates, .booking-price {
+.booking-dates,
+.booking-price {
   display: flex;
   align-items: center;
   color: #666;
 }
 
-.booking-dates i, .booking-price i {
+.booking-dates i,
+.booking-price i {
   margin-right: 0.5rem;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .booking-status-row {
@@ -183,23 +185,23 @@
 }
 
 .status-pending {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #fff8e1;
+  color: #ffa000;
 }
 
 .status-confirmed {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .status-completed {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-cancelled {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .booking-payment-status {
@@ -216,7 +218,7 @@
 
 .booking-user i {
   margin-right: 0.5rem;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .booking-actions {
@@ -225,7 +227,8 @@
   margin-top: auto;
 }
 
-.view-product-btn, .view-details-btn {
+.view-product-btn,
+.view-details-btn {
   padding: 0.6rem 1rem;
   border-radius: 5px;
   text-decoration: none;
@@ -240,7 +243,7 @@
 }
 
 .view-details-btn {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -248,25 +251,21 @@
   background-color: #e0e0e0;
 }
 
-.view-details-btn:hover {
-  background-color: #388E3C;
-}
-
 @media (max-width: 768px) {
   .booking-card {
     flex-direction: column;
   }
-  
+
   .booking-image {
     width: 100%;
     height: 200px;
   }
-  
+
   .booking-meta {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .booking-status-row {
     flex-direction: column;
     align-items: flex-start;
@@ -280,11 +279,11 @@
     white-space: nowrap;
     padding-bottom: 0.5rem;
   }
-  
+
   .tab-button {
     padding: 0.8rem 1rem;
   }
-  
+
   .booking-actions {
     flex-direction: column;
   }
