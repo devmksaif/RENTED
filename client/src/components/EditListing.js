@@ -149,6 +149,11 @@ function EditListing() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState(''); // 'success' or 'error'
+  const [modalMessage, setModalMessage] = useState('');
+  
   // Fetch listing data on component mount
   useEffect(() => {
     const fetchListingData = async () => {
@@ -179,7 +184,7 @@ function EditListing() {
         setError(null);
       } catch (error) {
         console.error('Error fetching listing:', error);
-        setError('Failed to load listing data. Please try again.');
+        showErrorModal('Failed to load listing data. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -188,13 +193,37 @@ function EditListing() {
     fetchListingData();
   }, [id]);
   
+  // Helper function to show error modal
+  const showErrorModal = (message) => {
+    setModalType('error');
+    setModalMessage(message);
+    setShowModal(true);
+  };
+  
+  // Helper function to show success modal
+  const showSuccessModal = (message) => {
+    setModalType('success');
+    setModalMessage(message);
+    setShowModal(true);
+  };
+  
+  // Close modal handler
+  const handleCloseModal = () => {
+    setShowModal(false);
+    
+    // If it was a success modal, navigate after closing
+    if (modalType === 'success') {
+      navigate('/listings');
+    }
+  };
+  
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
   };
   
   const handleLocationSearch = async () => {
     if (searchQuery.length < 3) {
-      setError('Please enter at least 3 characters to search');
+      showErrorModal('Please enter at least 3 characters to search');
       return;
     }
     
@@ -207,7 +236,7 @@ function EditListing() {
       setSearchResults(results.slice(0, 5)); // Limit to top 5 results
     } catch (error) {
       console.error("Search error:", error);
-      setError('Error searching for location. Please try again.');
+      showErrorModal('Error searching for location. Please try again.');
     } finally {
       setIsSearching(false);
     }
@@ -295,24 +324,25 @@ function EditListing() {
     
     // Validate coordinates
     if (!formData.latitude || !formData.longitude) {
-      setError('Please select a location on the map');
+      showErrorModal('Please select a location on the map');
       setIsSaving(false);
       return;
     }
     
     // Validate price
     if (!formData.price || formData.price <= 0) {
-      setError('Please enter a valid price');
+      showErrorModal('Please enter a valid price');
       setIsSaving(false);
       return;
     }
     
     try {
       await updateListing(id, formData);
-      navigate('/listings');
+      showSuccessModal('Listing updated successfully!');
+      // Note: Navigation now happens after modal is closed
     } catch (error) {
       console.error('Error updating listing:', error);
-      setError(error.response?.data?.message || 'Failed to update listing. Please try again.');
+      showErrorModal(error.response?.data?.message || 'Failed to update listing. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -336,10 +366,38 @@ function EditListing() {
         <p>Update your listing information</p>
       </div>
       
-      {error && (
-        <div className="error-alert">
-          <i className="fas fa-exclamation-circle"></i>
-          <span>{error}</span>
+      {/* Modal Component */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className={`modal-container ${modalType}-modal`}>
+            <div className="modal-header">
+              <h3>{modalType === 'success' ? 'Success!' : 'Error'}</h3>
+              <button 
+                className="modal-close-button"
+                onClick={handleCloseModal}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-icon">
+                {modalType === 'success' ? (
+                  <i className="fas fa-check-circle"></i>
+                ) : (
+                  <i className="fas fa-exclamation-circle"></i>
+                )}
+              </div>
+              <p>{modalMessage}</p>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="modal-button"
+                onClick={handleCloseModal}
+              >
+                {modalType === 'success' ? 'Continue' : 'Close'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
       

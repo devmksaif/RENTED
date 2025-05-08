@@ -30,7 +30,7 @@ export const getProducts = async (filters = {}) => {
 // Get a single listing by ID
 export const getListing = async (id) => {
   try {
-    const response = await axios.get(`/api/listings/${id}`);
+    const response = await axios.get(`/api/products/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -40,7 +40,9 @@ export const getListing = async (id) => {
 // Update a listing
 export const updateListing = async (id, listingData) => {
   try {
-    const response = await axios.put(`/api/listings/${id}`, listingData);
+    const response = await axios.patch(`/api/products/${id}`, listingData, {
+      headers: getAuthHeader()
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -75,10 +77,8 @@ export const getProductById = async (id) => {
 
 export const checkVerificationStatus = async () => {
   try {
-    const response = await axios.get(`${API_URL}/users/verification-status`, {
-      headers: getAuthHeader(),
-    });
-    return response.data.status;
+    const userProfile = await getUserProfile();
+    return userProfile.verificationStatus;
   } catch (error) {
     console.error("Error checking verification status:", error);
     return "still"; 
@@ -463,9 +463,8 @@ export const updateBookingStatus = async (id, status) => {
 
 export const cancelBooking = async (id, reason) => {
   try {
-    const response = await axios.patch(
-      `${API_URL}/bookings/${id}/cancel`,
-      { reason },
+    const response = await axios.delete(
+      `${API_URL}/bookings/${id}`,
       {
         headers: getAuthHeader(),
       }
