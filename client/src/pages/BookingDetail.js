@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getBookingById, cancelBooking } from '../services/api';
-import '../styles/BookingDetail.css';
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getBookingById, cancelBooking } from "../services/api";
+import "../styles/BookingDetail.css";
 
 function BookingDetail() {
   const { id } = useParams();
@@ -22,8 +22,8 @@ function BookingDetail() {
         setBooking(data);
         setError(null);
       } catch (error) {
-        console.error('Error fetching booking details:', error);
-        setError('Failed to load booking details. Please try again.');
+        console.error("Error fetching booking details:", error);
+        setError("Failed to load booking details. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -34,58 +34,113 @@ function BookingDetail() {
 
   useEffect(() => {
     if (booking && booking.meetingArea && !mapLoaded) {
-      if (!window.google) {
-        const googleMapsScript = document.createElement('script');
-        googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY'}&libraries=places`;
+      // Check if Google Maps API is available
+      if (typeof window.google === 'undefined') {
+        const googleMapsScript = document.createElement("script");
+        googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${
+          process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "YOUR_API_KEY"
+        }&libraries=places&callback=initMap`;
         googleMapsScript.async = true;
         googleMapsScript.defer = true;
-        googleMapsScript.onload = initMap;
-        document.head.appendChild(googleMapsScript);
         
+        // Define initMap as a global function that Google Maps can call
+        window.initMap = () => {
+          initializeMap();
+          setMapLoaded(true);
+        };
+        
+        document.head.appendChild(googleMapsScript);
+
         return () => {
-          document.head.removeChild(googleMapsScript);
+          // Clean up
+          if (document.head.contains(googleMapsScript)) {
+            document.head.removeChild(googleMapsScript);
+          }
+          delete window.initMap;
         };
       } else {
-        initMap();
+        // Google Maps API is already loaded
+        initializeMap();
+        setMapLoaded(true);
       }
     }
   }, [booking, mapLoaded]);
 
+  // Separate the map initialization logic
+  const initializeMap = () => {
+    if (!mapRef.current || !booking || !booking.meetingArea) return;
+
+    try {
+      const location = {
+        lat: booking.meetingArea.latitude,
+        lng: booking.meetingArea.longitude,
+      };
+
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: location,
+        zoom: 15,
+        mapTypeControl: false,
+        streetViewControl: true,
+        fullscreenControl: true,
+      });
+
+      const marker = new window.google.maps.Marker({
+        position: location,
+        map: map,
+        animation: window.google.maps.Animation.DROP,
+        title: booking.meetingArea.name,
+      });
+
+      markerRef.current = marker;
+
+      // Add info window with location name
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `<div style="padding: 5px;"><strong>${booking.meetingArea.name}</strong></div>`,
+      });
+
+      infoWindow.open(map, marker);
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      setError("Failed to load map. Please try again.");
+    }
+  };
+
+  // Remove the line below as it's outside of any function
+  // setMapLoaded(true);
+
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Pending':
-        return 'status-pending';
-      case 'Confirmed':
-        return 'status-confirmed';
-      case 'Completed':
-        return 'status-completed';
-      case 'Cancelled':
-        return 'status-cancelled';
+      case "Pending":
+        return "status-pending";
+      case "Confirmed":
+        return "status-confirmed";
+      case "Completed":
+        return "status-completed";
+      case "Cancelled":
+        return "status-cancelled";
       default:
-        return '';
+        return "";
     }
   };
 
   const handleCancelBooking = async () => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
+    if (window.confirm("Are you sure you want to cancel this booking?")) {
       try {
         setCancelLoading(true);
         await cancelBooking(id);
-        // Update booking status locally for immediate feedback
-        setBooking(prev => ({
+        setBooking((prev) => ({
           ...prev,
-          status: 'Cancelled'
+          status: "Cancelled",
         }));
-        // Display success message or notification
-        alert('Booking has been successfully cancelled.');
+        alert("Booking has been successfully cancelled.");
       } catch (error) {
-        console.error('Error cancelling booking:', error);
-        setError('Failed to cancel booking. Please try again.');
+        console.error("Error cancelling booking:", error);
+        setError("Failed to cancel booking. Please try again.", error);
       } finally {
         setCancelLoading(false);
       }
@@ -94,36 +149,36 @@ function BookingDetail() {
 
   const initMap = () => {
     if (!mapRef.current || !booking || !booking.meetingArea) return;
-    
-    const location = { 
-      lat: booking.meetingArea.latitude, 
-      lng: booking.meetingArea.longitude 
+
+    const location = {
+      lat: booking.meetingArea.latitude,
+      lng: booking.meetingArea.longitude,
     };
-    
+
     const map = new window.google.maps.Map(mapRef.current, {
       center: location,
       zoom: 15,
       mapTypeControl: false,
       streetViewControl: true,
-      fullscreenControl: true
+      fullscreenControl: true,
     });
-    
+
     const marker = new window.google.maps.Marker({
       position: location,
       map: map,
       animation: window.google.maps.Animation.DROP,
-      title: booking.meetingArea.name
+      title: booking.meetingArea.name,
     });
-    
+
     markerRef.current = marker;
-    
+
     // Add info window with location name
     const infoWindow = new window.google.maps.InfoWindow({
-      content: `<div style="padding: 5px;"><strong>${booking.meetingArea.name}</strong></div>`
+      content: `<div style="padding: 5px;"><strong>${booking.meetingArea.name}</strong></div>`,
     });
-    
+
     infoWindow.open(map, marker);
-    
+
     setMapLoaded(true);
   };
 
@@ -166,14 +221,14 @@ function BookingDetail() {
   }
 
   const rentalDuration = Math.ceil(
-    (new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)
+    (new Date(booking.endDate) - new Date(booking.startDate)) /
+      (1000 * 60 * 60 * 24)
   );
 
   return (
     <div className="booking-detail-container">
       <div className="breadcrumb">
-        <Link to="/">Home</Link> / 
-        <Link to="/bookings">My Bookings</Link> / 
+        <Link to="/">Home</Link> /<Link to="/bookings">My Bookings</Link> /
         <span>Booking #{booking._id.substring(0, 8)}</span>
       </div>
 
@@ -188,9 +243,13 @@ function BookingDetail() {
         <div className="booking-info-grid">
           <div className="booking-product-info">
             <div className="product-image">
-              <img 
-                src={booking.product.image || booking.product.images?.[0] || 'https://via.placeholder.com/300'} 
-                alt={booking.product.title} 
+              <img
+                src={
+                  booking.product.image ||
+                  booking.product.images?.[0] ||
+                  "https://via.placeholder.com/300"
+                }
+                alt={booking.product.title}
               />
             </div>
             <div className="product-details">
@@ -200,10 +259,14 @@ function BookingDetail() {
                   <i className="fas fa-tag"></i> {booking.product.category}
                 </div>
                 <div className="product-location">
-                  <i className="fas fa-map-marker-alt"></i> {booking.product.location}
+                  <i className="fas fa-map-marker-alt"></i>{" "}
+                  {booking.product.location}
                 </div>
               </div>
-              <Link to={`/product/${booking.product._id}`} className="view-product-btn">
+              <Link
+                to={`/product/${booking.product._id}`}
+                className="view-product-btn"
+              >
                 View Product Details
               </Link>
             </div>
@@ -221,7 +284,10 @@ function BookingDetail() {
             </div>
             <div className="booking-info-row">
               <div className="info-label">Rental Period:</div>
-              <div className="info-value">{formatDate(booking.startDate)} - {formatDate(booking.endDate)} ({rentalDuration} days)</div>
+              <div className="info-value">
+                {formatDate(booking.startDate)} - {formatDate(booking.endDate)}{" "}
+                ({rentalDuration} days)
+              </div>
             </div>
             <div className="booking-info-row">
               <div className="info-label">Quantity:</div>
@@ -229,12 +295,20 @@ function BookingDetail() {
             </div>
             <div className="booking-info-row">
               <div className="info-label">Payment Status:</div>
-              <div className={`info-value payment-${booking.paymentStatus.toLowerCase()}`}>{booking.paymentStatus}</div>
+              <div
+                className={`info-value payment-${booking.paymentStatus.toLowerCase()}`}
+              >
+                {booking.paymentStatus}
+              </div>
             </div>
             {booking.paymentMethod && (
               <div className="booking-info-row">
                 <div className="info-label">Payment Method:</div>
-                <div className="info-value">{booking.paymentMethod.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                <div className="info-value">
+                  {booking.paymentMethod
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                </div>
               </div>
             )}
             {booking.shippingAddress && (
@@ -277,10 +351,10 @@ function BookingDetail() {
             </div>
           </div>
 
-          {booking.status === 'Pending' || booking.status === 'Confirmed' ? (
+          {booking.status === "Pending" || booking.status === "Confirmed" ? (
             <div className="booking-actions">
-              <button 
-                className="cancel-booking-btn" 
+              <button
+                className="cancel-booking-btn"
                 onClick={handleCancelBooking}
                 disabled={cancelLoading}
               >
@@ -294,11 +368,7 @@ function BookingDetail() {
                   </>
                 )}
               </button>
-              {booking.paymentStatus === 'Pending' && (
-                <Link to={`/checkout?bookingId=${booking._id}`} className="pay-now-btn">
-                  <i className="fas fa-credit-card"></i> Pay Now
-                </Link>
-              )}
+              
               <Link to="/bookings" className="back-to-bookings-btn">
                 <i className="fas fa-arrow-left"></i> Back to Bookings
               </Link>
@@ -318,13 +388,17 @@ function BookingDetail() {
                 <i className="fas fa-map-marker-alt"></i>
                 <span>{booking.meetingArea.name}</span>
               </div>
-              <div 
-                ref={mapRef} 
+              <div
+                ref={mapRef}
                 className="meeting-area-map"
-                style={{ height: '250px', marginTop: '1rem', borderRadius: '8px' }}
+                style={{
+                  height: "250px",
+                  marginTop: "1rem",
+                  borderRadius: "8px",
+                }}
               ></div>
               <div className="meeting-area-actions">
-                <a 
+                <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${booking.meetingArea.latitude},${booking.meetingArea.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -341,4 +415,4 @@ function BookingDetail() {
   );
 }
 
-export default BookingDetail; 
+export default BookingDetail;

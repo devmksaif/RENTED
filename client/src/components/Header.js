@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import NotificationDropdown from './NotificationDropdown';
 import '../styles/Header.css';
+import { checkVerificationStatus } from '../services/api';
 
 function Header({ cartItemCount = 0 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,6 +13,7 @@ function Header({ cartItemCount = 0 }) {
   const [user, setUser] = useState(null);
   const [localCartCount, setLocalCartCount] = useState(0);
   const { unreadCount } = useNotifications();
+  const [verification,setVerification] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +33,12 @@ function Header({ cartItemCount = 0 }) {
     const handleCartUpdate = () => {
       updateCartCountFromLocalStorage();
     };
+
+    const getVerification = async () => {
+      const verifcation = await checkVerificationStatus();
+      setVerification(verifcation);
+    }
+    getVerification();
     
     window.addEventListener('cartUpdated', handleCartUpdate);
     
@@ -152,6 +160,30 @@ function Header({ cartItemCount = 0 }) {
                           <i className="fas fa-list"></i>
                           <span>My Listings</span>
                         </Link>
+                        {
+                          verification === 'pending' ? (
+                            <Link to="/verify/processing" className="dropdown-item verification-pending">
+                              <i className="fas fa-spinner fa-spin"></i>
+                              <span>Verification Pending</span>
+                            </Link>
+                          ) :  verification === 'still' ? (
+                            <Link to="/verify/id" className="dropdown-item">
+                              <i className="fas fa-id-card"></i>
+                              <span>Get Verified</span>
+                            </Link>
+                          ) : verification === 'verified' ? (
+                            <div className="dropdown-item verification-verified">
+                              <i className="fas fa-check-circle"></i>
+                              <span>Verified Account</span>
+                            </div>
+                          ) : verification === 'rejected' ? (
+                            <Link to="/verify/id" className="dropdown-item verification-rejected">
+                              <i className="fas fa-exclamation-circle"></i>
+                              <span>Verification Failed - Try Again</span>
+                            </Link>
+                          ) : null
+                        }
+                       
                         {user.role === 'admin' && (
                           <Link to="/admin" className="dropdown-item">
                             <i className="fas fa-tachometer-alt"></i>

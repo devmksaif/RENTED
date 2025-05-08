@@ -6,7 +6,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   background-color: #fff;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .checkout-header {
@@ -51,7 +51,7 @@
 }
 
 .step.active .step-number {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -62,7 +62,7 @@
 }
 
 .step.active .step-label {
-  color: #4CAF50;
+  color: #4caf50;
   font-weight: 600;
 }
 
@@ -151,7 +151,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #4caf50;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
   background-color: #fff;
 }
@@ -194,7 +194,7 @@
 
 .next-button {
   padding: 12px 25px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 8px;
@@ -216,7 +216,7 @@
 }
 
 .place-order-button {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 14px 25px;
@@ -228,13 +228,13 @@
 }
 
 .place-order-button:hover {
-  background-color: #388E3C;
+  background-color: #388e3c;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .place-order-button::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -259,13 +259,15 @@
 }
 
 .place-order-button:disabled {
-  background-color: #9E9E9E;
+  background-color: #9e9e9e;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.back-button i, .next-button i, .place-order-button i {
+.back-button i,
+.next-button i,
+.place-order-button i {
   margin: 0 8px;
 }
 
@@ -273,7 +275,8 @@
   margin-left: 0;
 }
 
-.next-button i, .place-order-button i {
+.next-button i,
+.place-order-button i {
   margin-right: 0;
 }
 
@@ -293,7 +296,7 @@
 }
 
 .payment-method:hover {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   background-color: #f9f9f9;
 }
 
@@ -315,7 +318,7 @@
 }
 
 .payment-method:has(input:checked) {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   background-color: #f1f8e9;
 }
 
@@ -363,7 +366,7 @@
   right: 15px;
   background: none;
   border: none;
-  color: #4CAF50;
+  color: #4caf50;
   cursor: pointer;
   font-size: 14px;
 }
@@ -481,7 +484,7 @@
 
 .summary-row.total span:last-child {
   font-weight: 700;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* Add hover effect for better interactivity */
@@ -495,9 +498,15 @@
 
 /* Add animation for price changes */
 @keyframes priceChange {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .summary-row span:last-child {
@@ -535,29 +544,29 @@
 
 /* Add icon for shipping */
 .summary-row:nth-child(2) span:first-child::before {
-  content: '\f48b';
-  font-family: 'Font Awesome 5 Free';
+  content: "\f48b";
+  font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 8px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* Add icon for subtotal */
 .summary-row:first-child span:first-child::before {
-  content: '\f02c';
-  font-family: 'Font Awesome 5 Free';
+  content: "\f02c";
+  font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 8px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* Add icon for total */
 .summary-row.total span:first-child::before {
-  content: '\f3d1';
-  font-family: 'Font Awesome 5 Free';
+  content: "\f3d1";
+  font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 8px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .checkout-error {
@@ -586,7 +595,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #4CAF50;
+  border-top: 3px solid #4caf50;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
@@ -603,21 +612,25 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 900px) {
   .checkout-content {
     flex-direction: column;
   }
-  
+
   .order-summary-sidebar {
     width: 100%;
     position: static;
     margin-top: 20px;
   }
-  
+
   .review-sections {
     flex-direction: column;
   }
@@ -628,7 +641,7 @@
     flex-direction: column;
     gap: 0;
   }
-  
+
   .step-label {
     font-size: 12px;
   }
@@ -641,16 +654,16 @@
   .checkout-content {
     flex-direction: column;
   }
-  
+
   .checkout-container {
     padding: 1rem;
   }
-  
+
   .checkout-form-container {
     width: 100%;
     margin-bottom: 20px;
   }
-  
+
   .order-summary-sidebar {
     width: 100%;
     position: relative;
@@ -659,26 +672,26 @@
     max-height: none;
     margin-bottom: 20px;
   }
-  
+
   .form-row {
     flex-direction: column;
   }
-  
+
   .form-row .form-group {
     width: 100%;
     margin-right: 0;
   }
-  
+
   /* Show mobile proceed button */
   .mobile-proceed-btn-container {
     display: block;
     margin-top: 20px;
   }
-  
+
   .mobile-proceed-btn {
     width: 100%;
     padding: 15px;
-    background-color: #4CAF50;
+    background-color: #4caf50;
     color: white;
     border: none;
     border-radius: 5px;
@@ -692,85 +705,85 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
   }
-  
+
   .mobile-proceed-btn i {
     margin-left: 10px;
     transition: transform 0.3s ease;
   }
-  
+
   .mobile-proceed-btn:hover {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
-  
+
   .mobile-proceed-btn:active {
     transform: translateY(2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   .mobile-proceed-btn:hover i {
     transform: translateX(3px);
   }
-  
+
   /* Hide desktop form buttons on mobile */
   .form-buttons {
     display: none;
   }
-  
+
   /* Adjust order items in review page */
   .order-item {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .item-image {
     margin-bottom: 10px;
   }
-  
+
   .item-price {
     margin-top: 10px;
     align-self: flex-end;
   }
-  
+
   /* Payment method styles */
   .payment-methods {
     flex-direction: column;
   }
-  
+
   .payment-method {
     width: 100%;
     margin: 5px 0;
   }
-  
+
   /* Credit card form */
   .credit-card-details .form-row {
     flex-direction: column;
   }
-  
+
   .credit-card-details .form-group {
     width: 100%;
     margin-right: 0;
   }
-  
+
   /* Step indicator */
   .checkout-steps {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 10px;
   }
-  
+
   .step-label {
     font-size: 12px;
   }
-  
+
   .step-connector {
     width: 30px;
   }
-  
+
   .step-indicators {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .step-indicator {
     margin-bottom: 10px;
   }
@@ -806,7 +819,7 @@
 
 .card-security-message i {
   margin-right: 8px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* Add progress bar styles */
@@ -822,7 +835,7 @@
 
 .progress-bar {
   height: 100%;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   border-radius: 4px;
   transition: width 0.5s ease-in-out;
 }
@@ -853,7 +866,7 @@
 
 .checkout-form-container input:focus,
 .checkout-form-container select:focus {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   outline: none;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
@@ -872,10 +885,9 @@
   color: #757575;
 }
 
-/* Delivery date input styling */
 input[type="date"] {
   width: 100%;
-  padding: 12px 15px;
+  padding: 10px 5px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 15px;
@@ -886,7 +898,7 @@ input[type="date"] {
 
 input[type="date"]:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #4caf50;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
@@ -894,7 +906,7 @@ input[type="date"]:focus {
 .card-type-indicator {
   margin-top: 8px;
   font-size: 13px;
-  color: #4CAF50;
+  color: #4caf50;
   display: flex;
   align-items: center;
 }
@@ -904,11 +916,11 @@ input[type="date"]:focus {
 }
 
 .card-type-indicator:before {
-  content: '\f058';
-  font-family: 'Font Awesome 5 Free';
+  content: "\f058";
+  font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 6px;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* Enhanced card input container with card type icons */
@@ -947,7 +959,7 @@ input[type="date"]:focus {
   width: 60px;
   height: 60px;
   border: 5px solid #f3f3f3;
-  border-top: 5px solid #4CAF50;
+  border-top: 5px solid #4caf50;
   border-radius: 50%;
   margin: 0 auto 20px;
   animation: spin 1.5s linear infinite;
@@ -967,8 +979,12 @@ input[type="date"]:focus {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive styles for shipping form */

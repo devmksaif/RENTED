@@ -162,23 +162,7 @@
   cursor: not-allowed;
 }
 
-.location-search-button {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-}
+
 
 .location-search-button:hover {
   background-color: #3d9c40;

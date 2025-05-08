@@ -22,6 +22,11 @@ import CreateListing from './pages/CreateListing';
 import { NotificationProvider } from './context/NotificationContext';
 import Checkout from './pages/Checkout';
 import CheckoutSuccess from './pages/CheckoutSuccess';
+import IdVerification from './pages/verification/IdVerification';
+import SelfieCapture from './pages/verification/SelfieCapture';
+import VerificationProcessing from './pages/verification/VerificationProcessing';
+import VerificationConfirmation from './pages/verification/VerificationConfirmation';
+import EditListing from './components/EditListing';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -506,6 +511,15 @@ function App() {
               </RenterRoute>
             } />
             
+            {/* Inside your Routes component, add this new route: */}
+            <Route path="/edit-listing/:id" element={
+              <RenterRoute>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <EditListing />
+                <Footer />
+              </RenterRoute>
+            } />
+            
             {/* Admin Routes */}
             <Route path="/admin/*" element={
               <AdminRoute>
@@ -567,6 +581,10 @@ function App() {
     </div>
               </>
             } />
+             <Route path="/verify/id" element={<IdVerification />} />
+            <Route path="/verify/selfie" element={<SelfieCapture />} />
+            <Route path="/verify/processing" element={<VerificationProcessing />} />
+            <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
           </Routes>
         </div>
       </NotificationProvider>

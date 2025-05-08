@@ -9,6 +9,8 @@ function ListingsList() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState(null);
 
   useEffect(() => {
     fetchListings();
@@ -42,6 +44,27 @@ function ListingsList() {
         setError('Failed to delete listing. Please try again.');
       }
     }
+  };
+
+  const handleDeleteClick = (id) => {
+    setListingToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteProduct(listingToDelete);
+      setListings(listings.filter(listing => listing._id !== listingToDelete));
+      setShowDeleteModal(false);
+      setListingToDelete(null);
+    } catch (error) {
+      setError('Failed to delete listing. Please try again.');
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setListingToDelete(null);
   };
 
   // Add filtering functionality
@@ -143,7 +166,7 @@ function ListingsList() {
                 </div>
                 <div className="listing-quick-actions">
                   <button 
-                    onClick={() => handleDeleteListing(listing._id)} 
+                    onClick={() => handleDeleteClick(listing._id)} 
                     className="quick-action-btn delete-btn"
                     title="Delete listing"
                   >
@@ -169,7 +192,7 @@ function ListingsList() {
                   <span><i className="fas fa-map-marker-alt"></i> {listing.location}</span>
                   <span><i className="fas fa-tag"></i> {listing.category}</span>
                 </div>
-                <Link to={`/products/${listing._id}`} className="view-listing-btn">
+                <Link to={`/product/${listing._id}`} className="view-listing-btn">
                   View Details
                 </Link>
               </div>
@@ -200,6 +223,33 @@ function ListingsList() {
           </div>
         )}
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <div className="delete-modal-header">
+              <h3>Confirm Deletion</h3>
+              <button className="close-modal-btn" onClick={cancelDelete}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="delete-modal-body">
+              <i className="fas fa-exclamation-triangle warning-icon"></i>
+              <p>Are you sure you want to delete this listing?</p>
+              <p className="delete-warning">This action cannot be undone.</p>
+            </div>
+            <div className="delete-modal-footer">
+              <button className="cancel-btn" onClick={cancelDelete}>
+                Cancel
+              </button>
+              <button className="confirm-delete-btn" onClick={confirmDelete}>
+                Delete Listing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 .booking-detail-container {
   max-width: 1200px;
   margin: 2rem auto;
@@ -241,7 +242,7 @@
   margin-top: 1rem;
 }
 
-.cancel-booking-btn, .pay-now-btn, .back-to-bookings-btn {
+.cancel-booking-btn, .back-to-bookings-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -264,14 +265,7 @@
   background-color: #d32f2f;
 }
 
-.pay-now-btn {
-  background-color: #4caf50;
-  color: white;
-}
 
-.pay-now-btn:hover {
-  background-color: #388e3c;
-}
 
 .back-to-bookings-btn {
   background-color: #607d8b;
@@ -282,7 +276,7 @@
   background-color: #455a64;
 }
 
-.cancel-booking-btn i, .pay-now-btn i, .back-to-bookings-btn i {
+.cancel-booking-btn i, .back-to-bookings-btn i {
   margin-right: 0.5rem;
 }
 

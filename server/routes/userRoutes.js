@@ -117,6 +117,33 @@ router.get('/profile', auth, async (req, res) => {
   }
 });
 
+router.put('/update/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { updates } = req.body;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update user fields - make sure we're using the string value from updates
+    // The error occurs because we're trying to set an object to an enum field
+    user.verificationStatus = updates;
+    await user.save();
+    
+    // Return success response
+    res.status(200).json({ 
+      message: 'User verification status updated successfully',
+      verificationStatus: user.verificationStatus
+    });
+
+  } catch(error) {
+    console.error('Error updating verification status:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 // Update user profile
 router.patch('/profile', auth, async (req, res) => {
   const updates = Object.keys(req.body);
