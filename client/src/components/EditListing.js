@@ -131,7 +131,7 @@ function EditListing() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    category: [],
     price: '',
     location: '',
     image: '',
@@ -154,6 +154,18 @@ function EditListing() {
   const [modalType, setModalType] = useState(''); // 'success' or 'error'
   const [modalMessage, setModalMessage] = useState('');
   
+  // Define available categories (same as CreateListing.js)
+  const availableCategories = [
+    'Electronics',
+    'Clothing',
+    'Home & Garden',
+    'Sports & Outdoors',
+    'Vehicles',
+    'Tools & Equipment',
+    'Toys & Games',
+    'Other'
+  ];
+  
   // Fetch listing data on component mount
   useEffect(() => {
     const fetchListingData = async () => {
@@ -165,7 +177,7 @@ function EditListing() {
         setFormData({
           title: data.title || '',
           description: data.description || '',
-          category: data.category || '',
+          category: Array.isArray(data.category) ? data.category : (data.category ? [data.category] : []),
           price: data.price || '',
           location: data.location || '',
           image: data.image || '',
@@ -300,8 +312,22 @@ function EditListing() {
     }));
   };
   
+  // Handler for category selection/deselection
+  const handleCategoryToggle = (category) => {
+    setFormData(prev => {
+      const currentCategories = Array.isArray(prev.category) ? prev.category : [];
+      if (currentCategories.includes(category)) {
+        // Remove category if already selected
+        return { ...prev, category: currentCategories.filter(cat => cat !== category) };
+      } else {
+        // Add category if not selected
+        return { ...prev, category: [...currentCategories, category] };
+      }
+    });
+  };
+  
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
     if (name === 'searchRadius') {
       const radius = parseFloat(value) || 20;
@@ -431,23 +457,40 @@ function EditListing() {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="category">Category</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a category</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Home & Garden">Home & Garden</option>
-              <option value="Sports & Outdoors">Sports & Outdoors</option>
-              <option value="Vehicles">Vehicles</option>
-              <option value="Tools & Equipment">Tools & Equipment</option>
-              <option value="Toys & Games">Toys & Games</option>
-              <option value="Other">Other</option>
-            </select>
+            
+            {/* Display Selected Categories as Tags */}
+            {formData.category.length > 0 && (
+              <div className="selected-categories-tags">
+                {formData.category.map(cat => (
+                  <div key={cat} className="category-tag">
+                    <span>{cat}</span>
+                    <button type="button" onClick={() => handleCategoryToggle(cat)}>
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Display Available Categories to Select */}
+            <div className="available-categories-list">
+              <h4>Select Categories:</h4>
+              <div className="categories-grid">
+                {availableCategories.map(cat => (
+                  // Render only if not already selected
+                  !formData.category.includes(cat) && (
+                    <button
+                      key={cat}
+                      type="button"
+                      className="available-category-item"
+                      onClick={() => handleCategoryToggle(cat)}
+                    >
+                      {cat}
+                    </button>
+                  )
+                ))}
+              </div>
+            </div>
           </div>
           
           <div className="form-group">

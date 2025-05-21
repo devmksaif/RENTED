@@ -190,7 +190,7 @@ function ListingsList() {
                 </p>
                 <div className="listing-meta">
                   <span><i className="fas fa-map-marker-alt"></i> {listing.location}</span>
-                  <span><i className="fas fa-tag"></i> {listing.category}</span>
+                  <span><i className="fas fa-tag"></i> {Array.isArray(listing.category) ? listing.category.join(', ') : listing.category}</span>
                 </div>
                 <Link to={`/product/${listing._id}`} className="view-listing-btn">
                   View Details

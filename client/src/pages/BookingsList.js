@@ -181,6 +181,13 @@ function BookingsList() {
                     <span>${booking.totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
+                {/* Display categories as a comma-separated list */}
+                {booking.product?.category && (
+                  <div className="booking-category">
+                    <i className="fas fa-tag"></i>
+                    <span>{Array.isArray(booking.product.category) ? booking.product.category.join(', ') : booking.product.category}</span>
+                  </div>
+                )}
                 <div className="booking-status-row">
                   <div className={`booking-status ${getStatusClass(booking.status)}`}>
                     {booking.status}

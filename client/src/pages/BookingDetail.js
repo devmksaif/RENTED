@@ -256,7 +256,7 @@ function BookingDetail() {
               <h2>{booking.product.title}</h2>
               <div className="product-meta">
                 <div className="product-category">
-                  <i className="fas fa-tag"></i> {booking.product.category}
+                  <i className="fas fa-tag"></i> {Array.isArray(booking.product.category) ? booking.product.category.join(', ') : booking.product.category}
                 </div>
                 <div className="product-location">
                   <i className="fas fa-map-marker-alt"></i>{" "}

@@ -130,7 +130,7 @@ function CreateListing() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    category: [],
     price: '',
     location: '',
     image: '',
@@ -180,6 +180,18 @@ function CreateListing() {
 const [searchQuery, setSearchQuery] = useState('');
 const [isSearching, setIsSearching] = useState(false);
 const [searchResults, setSearchResults] = useState([]);
+
+// Define available categories
+const availableCategories = [
+  'Electronics',
+  'Clothing',
+  'Home & Garden',
+  'Sports & Outdoors',
+  'Vehicles',
+  'Tools & Equipment',
+  'Toys & Games',
+  'Other'
+];
 
 // Add this new function for handling search input changes
 const handleSearchInputChange = (e) => {
@@ -328,8 +340,22 @@ const handleSearchResultClick = (result) => {
     }));
   };
 
+  // Handler for category selection/deselection
+  const handleCategoryToggle = (category) => {
+    setFormData(prev => {
+      const currentCategories = Array.isArray(prev.category) ? prev.category : [];
+      if (currentCategories.includes(category)) {
+        // Remove category if already selected
+        return { ...prev, category: currentCategories.filter(cat => cat !== category) };
+      } else {
+        // Add category if not selected
+        return { ...prev, category: [...currentCategories, category] };
+      }
+    });
+  };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
     if (name === 'searchRadius') {
       const radius = parseFloat(value) || 20;
@@ -337,8 +363,6 @@ const handleSearchResultClick = (result) => {
         ...formData,
         searchRadius: radius
       });
-      
-      // No need to update circle as it will be handled by the Circle component
     } else {
       setFormData({
         ...formData,
@@ -430,42 +454,57 @@ const handleSearchResultClick = (result) => {
           ></textarea>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="category">Category</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a category</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Home & Garden">Home & Garden</option>
-              <option value="Sports & Outdoors">Sports & Outdoors</option>
-              <option value="Vehicles">Vehicles</option>
-              <option value="Tools & Equipment">Tools & Equipment</option>
-              <option value="Toys & Games">Toys & Games</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+        <div className="form-group">
+          <label htmlFor="category">Category</label>
+          
+          {/* Display Selected Categories as Tags */}
+          {formData.category.length > 0 && (
+            <div className="selected-categories-tags">
+              {formData.category.map(cat => (
+                <div key={cat} className="category-tag">
+                  <span>{cat}</span>
+                  <button type="button" onClick={() => handleCategoryToggle(cat)}>
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-          <div className="form-group">
-            <label htmlFor="price">Price per day ($)</label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-              required
-            />
+          {/* Display Available Categories to Select */}
+          <div className="available-categories-list">
+            <h4>Select Categories:</h4>
+            <div className="categories-grid">
+              {availableCategories.map(cat => (
+                // Render only if not already selected
+                !formData.category.includes(cat) && (
+                  <button
+                    key={cat}
+                    type="button"
+                    className="available-category-item"
+                    onClick={() => handleCategoryToggle(cat)}
+                  >
+                    {cat}
+                  </button>
+                )
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="price">Price per day ($)</label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            required
+          />
         </div>
 
         <div className="form-group location-group">
@@ -568,34 +607,32 @@ const handleSearchResultClick = (result) => {
           </small>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="availability">Availability</label>
-            <select
-              id="availability"
-              name="availability"
-              value={formData.availability}
-              onChange={handleChange}
-              required
-            >
-              <option value="Available">Available</option>
-              <option value="Unavailable">Unavailable</option>
-              <option value="Maintenance">Maintenance</option>
-            </select>
-          </div>
+        <div className="form-group">
+          <label htmlFor="availability">Availability</label>
+          <select
+            id="availability"
+            name="availability"
+            value={formData.availability}
+            onChange={handleChange}
+            required
+          >
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+            <option value="Maintenance">Maintenance</option>
+          </select>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="image">Image URL</label>
-            <input
-              type="url"
-              id="image"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-            />
-            <small>Provide a URL to an image of your item. Leave blank for a placeholder image.</small>
-          </div>
+        <div className="form-group">
+          <label htmlFor="image">Image URL</label>
+          <input
+            type="url"
+            id="image"
+            name="image"
+            value={formData.image}
+            onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+          />
+          <small>Provide a URL to an image of your item. Leave blank for a placeholder image.</small>
         </div>
 
         <div className="payment-notice" style={{marginBottom: '20px'}}>
