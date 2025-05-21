@@ -42,7 +42,7 @@ router.post('/register', async (req, res) => {
     
     // Generate token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, user },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '7d' }
     );
@@ -87,13 +87,14 @@ router.post('/login', async (req, res) => {
     
     // Generate token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, user },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '7d' }
     );
     
     res.json({
       _id: user._id,
+      userId : user._id,
       name: user.name,
       email: user.email,
       role: user.role || (user.isAdmin ? 'admin' : 'user'),

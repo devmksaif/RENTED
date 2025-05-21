@@ -198,7 +198,20 @@ function ProductCard({ product, onAddToCart }) {
             <div className="pc-header">
               <h3 className="pc-title">{product.title}</h3>
               <div className="pc-meta">
-                <div className="pc-category">{product.category}</div>
+                <div className="pc-category">
+                  {Array.isArray(product.category) 
+                    ? product.category.map((cat, index) => (
+                        <span key={cat}>
+                          {cat}
+                          {index < product.category.length - 2
+                            ? ', '
+                            : index === product.category.length - 2
+                              ? ' & '
+                              : ''}
+                        </span>
+                      ))
+                    : product.category}
+                </div>
                 <div className="pc-rating">
                   {renderStars(product.rating)}
                   <span className="pc-reviews">({product.reviews})</span>
