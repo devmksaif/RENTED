@@ -11,7 +11,9 @@ router.get('/', async (req, res) => {
     // Build filter object
     const filter = {};
     
-    if (category) filter.category = category;
+    if (category) {
+      filter.category = { $in: [category] };
+    }
     if (location) filter.location = { $regex: location, $options: 'i' };
     if (availability) filter.availability = availability;
     if (rating) filter.rating = { $gte: Number(rating) };
@@ -43,7 +45,7 @@ router.get('/search', async (req, res) => {
       $or: [
         { title: { $regex: query, $options: 'i' } },
         { description: { $regex: query, $options: 'i' } },
-        { category: { $regex: query, $options: 'i' } }
+        { category: { $elemMatch: { $regex: query, $options: 'i' } } }
       ]
     });
     
@@ -57,7 +59,7 @@ router.get('/search', async (req, res) => {
 router.get('/category/:category', async (req, res) => {
   try {
     const products = await Product.find({ 
-      category: { $regex: new RegExp(req.params.category, 'i') }
+      category: { $in: [new RegExp(req.params.category, 'i')] }
     });
     
     res.json(products);
@@ -136,7 +138,9 @@ router.get('/nearby', async (req, res) => {
     };
     
     // Add optional filters
-    if (category) filter.category = category;
+    if (category) {
+      filter.category = { $in: [category] };
+    }
     if (availability) filter.availability = availability;
     if (rating) filter.rating = { $gte: Number(rating) };
     
@@ -174,6 +178,9 @@ router.post('/', auth, async (req, res) => {
       delete productData.latitude;
     }
     
+    // Add console log here to see the category data before creating the product
+    console.log('Category data before creation:', productData.category, typeof productData.category);
+
     const product = new Product(productData);
     const newProduct = await product.save();
     
@@ -217,6 +224,9 @@ router.patch('/:id', auth, async (req, res) => {
       product[update] = updateData[update];
     });
     
+    // Add console log here to see the category data before saving the updated product
+    console.log('Category data before update save:', product.category, typeof product.category);
+
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (error) {

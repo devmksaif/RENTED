@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // Update the imports to include saveCart and clearCart
 import { getCart, saveCart, clearCart as clearCartFromServer, getProducts, getNearbyProducts } from './services/api';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -72,6 +72,8 @@ function App() {
   const [searchRadius, setSearchRadius] = useState(10);
   const [filterLocation, setFilterLocation] = useState(null);
   const [filterRadius, setFilterRadius] = useState(10);
+  // Add state for maximum product price
+  const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
 
   // Handler for location selection from Filters
   const handleLocationSelect = (location) => {
@@ -403,7 +405,7 @@ function App() {
     console.log('Resetting filters'); // Log reset
     setFilters({
       category: '',
-      priceRange: [0, 500],
+      priceRange: [0, maxPrice], // Reset max price to the current maxPrice
       location: '',
       availability: '',
       rating: '',
@@ -446,6 +448,51 @@ function App() {
     });
   };
   
+  // Effect to calculate max price whenever products change
+  useEffect(() => {
+    if (products.length > 0) {
+      const highestPrice = Math.max(...products.map(product => product.price));
+      setMaxPrice(highestPrice);
+      
+      // Also update the priceRange filter if the current max is higher than the previous max
+      // This prevents the slider from being stuck at an old lower max
+      setFilters(prevFilters => {
+        const currentMin = prevFilters.priceRange[0];
+        const currentMax = prevFilters.priceRange[1];
+        if (currentMax < highestPrice) {
+          return { ...prevFilters, priceRange: [currentMin, highestPrice] };
+        } else {
+          return prevFilters;
+        }
+      });
+
+    } else {
+      setMaxPrice(500); // Reset to default if no products
+       setFilters(prevFilters => ({ ...prevFilters, priceRange: [0, 500] }));
+    }
+  }, [products]);
+
+  // Apply filters whenever filters state changes, except for the initial render
+  const initialRender = useRef(true);
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    // Only apply filters if not currently loading nearby products (which sets filteredProducts directly)
+    if (!isLoading) {
+       applyFilters();
+    }
+
+  }, [filters, products, isLoading, filterLocation, filterRadius]); // Depend on filters, products, and isLoading
+
+  // Effect to re-apply filters when nearbyProducts are fetched and isLoading becomes false
+  useEffect(() => {
+    if (!isLoading && nearbyProducts.length > 0) {
+       applyFilters();
+    }
+  }, [isLoading, nearbyProducts]); // Depend on isLoading and nearbyProducts
+
   return (
     <Router>
       <NotificationProvider>
@@ -567,6 +614,7 @@ function App() {
   onResetFilters={resetFilters}
   userLocation={userLocation}
   onLocationSelect={handleLocationSelect}
+  maxPrice={maxPrice}
 />
           {isLoading ? (
             <div className="loading-container">

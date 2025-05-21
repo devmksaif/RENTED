@@ -6,20 +6,20 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect }) {
+function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect, maxPrice }) {
   const categories = ['All', 'Electronics', 'Furniture', 'Tools', 'Vehicles', 'Clothing', 'Sports'];
   const [locationInput, setLocationInput] = useState(filters.location || '');
   
   // State for price range using MUI Slider format [min, max]
-  const [priceRange, setPriceRange] = useState(Array.isArray(filters.priceRange) ? filters.priceRange : [0, 500]);
+  const [priceRange, setPriceRange] = useState(Array.isArray(filters.priceRange) ? filters.priceRange : [0, maxPrice || 500]);
 
-  // Max possible price for the slider (can be adjusted)
-  const MAX_PRICE = 1000; // Increased max price slightly
+  // Max possible price for the slider (now comes from props or uses a default)
+  const MAX_PRICE = maxPrice || 500; // Use the prop or a default
 
-  // Effect to sync internal state if filters prop changes externally
+  // Effect to sync internal state if filters prop changes externally, including maxPrice
   useEffect(() => {
-    setPriceRange(Array.isArray(filters.priceRange) ? filters.priceRange : [0, 500]);
-  }, [filters.priceRange]);
+    setPriceRange(Array.isArray(filters.priceRange) ? filters.priceRange : [0, maxPrice || 500]);
+  }, [filters.priceRange, maxPrice]); // Add maxPrice to dependencies
 
   // Default coordinates for New York City
   const DEFAULT_COORDS = {
@@ -108,16 +108,8 @@ function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect }) 
       <div className="filter-section">
         <h4>Price Range</h4>
         <Box sx={{ width: 'auto', padding: '0 10px' }}>
-          <Slider
-            value={priceRange}
-            onChange={handleSliderChange}
-            onChangeCommitted={handleSliderChangeCommitted}
-            valueLabelDisplay="auto"
-            min={0}
-            max={MAX_PRICE}
-            step={10}
-            disableSwap
-          />
+          
+          
            <Grid container spacing={2} alignItems="center">
             <Grid item xs>
               <TextField
@@ -129,7 +121,7 @@ function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect }) 
                 size="small"
                 InputProps={{
                   startAdornment: <Typography sx={{ mr: 0.5 }}>$</Typography>,
-                  inputProps: { min: 0, max: priceRange[1] },
+                  inputProps: { min: 0, max: priceRange[1] }, // Use dynamic MAX_PRICE
                 }}
                 variant="outlined"
                 fullWidth
@@ -148,7 +140,7 @@ function Filters({ filters, onFilterChange, onResetFilters, onLocationSelect }) 
                 size="small"
                  InputProps={{
                   startAdornment: <Typography sx={{ mr: 0.5 }}>$</Typography>,
-                   inputProps: { min: priceRange[0], max: MAX_PRICE },
+                   inputProps: { min: priceRange[0], max: MAX_PRICE }, // Use dynamic MAX_PRICE
                 }}
                 variant="outlined"
                 fullWidth
