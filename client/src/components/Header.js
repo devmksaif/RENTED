@@ -144,8 +144,7 @@ function Header({ cartItemCount = 0 }) {
                         </div>
                         <div className="user-info">
                           <h4>{user.name}</h4>
-                          <p>{user.email}</p>
-                        </div>
+                         </div>
                       </div>
                       <div className="profile-dropdown-menu">
                         <Link to="/profile" className="dropdown-item">

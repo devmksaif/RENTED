@@ -146,6 +146,7 @@ export const addToCart = async (
   startDate = null,
   endDate = null
 ) => {
+  console.log(getAuthHeader())
   try {
     const response = await axios.post(
       `${API_URL}/cart/add`,
