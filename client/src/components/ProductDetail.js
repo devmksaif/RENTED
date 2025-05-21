@@ -410,25 +410,7 @@ function ProductDetail({ onAddToCart }) {
               </div>
             </div>
 
-            <div className="duration-slider-container">
-              <label htmlFor="duration-slider">
-                Rental Duration:{" "}
-                <span className="duration-value">{rentalDuration} days</span>
-              </label>
-              <input
-                type="range"
-                id="duration-slider"
-                min={product.minRentalDays || 1}
-                max={product.maxRentalDays || 30}
-                value={rentalDuration}
-                onChange={handleDurationChange}
-                className="duration-slider"
-              />
-              <div className="slider-markers">
-                <span>{product.minRentalDays || 1}</span>
-                <span>{product.maxRentalDays || 30}</span>
-              </div>
-            </div>
+             
 
             {dateError && (
               <div className="date-error-message">

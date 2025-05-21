@@ -90,7 +90,7 @@ function Header({ cartItemCount = 0 }) {
         
         
         <div className="header-actions">
-          {isLoggedIn && (user?.accountType === 'renter' || user?.accountType === 'both') && (
+          {isLoggedIn && (user?.accountType === 'renter' || user?.accountType == 'both') && (
             <Link to="/listings/create" className="action-button">
               <i className="fas fa-plus"></i>
               <span>List Item</span>
