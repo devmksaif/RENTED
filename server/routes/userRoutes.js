@@ -49,12 +49,15 @@ router.post('/register', async (req, res) => {
     
     res.status(201).json({
       _id: user._id,
+      userId : user._id,
       name: user.name,
       email: user.email,
+      role: user.role || (user.isAdmin ? 'admin' : 'user'),
       accountType: user.accountType,
+      phone : user.phone,
+      verificationStatus : user.verificationStatus,
+      address : user.address,
       meetingAreas: user.meetingAreas,
-      isAdmin: user.isAdmin,
-      role: user.isAdmin ? 'admin' : 'user', // Add role for frontend
       token
     });
   } catch (error) {
@@ -98,6 +101,11 @@ router.post('/login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role || (user.isAdmin ? 'admin' : 'user'),
+      accountType: user.accountType,
+      phone : user.phone,
+      verificationStatus : user.verificationStatus,
+      address : user.address,
+      meetingAreas: user.meetingAreas,
       token
     });
   } catch (error) {

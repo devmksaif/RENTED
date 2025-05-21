@@ -465,7 +465,7 @@ function UserProfile() {
         }
       });
       
-      // Reset form and map
+       
       setShowMap(false);
       setAddressFromMap('');
     } catch (error) {

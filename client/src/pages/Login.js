@@ -35,7 +35,14 @@ function Login() {
         id: response._id,
         name: response.name,
         email: response.email,
-        role: response.role || 'user' // Ensure role has a default value
+        role: response.role || 'user', // Ensure role has a default value
+        accountType: response.accountType,
+        verificationStatus: response.verificationStatus,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
+        address: response.address,
+        meetingAreas : response.meetingAreas,
+        phone : response.phone
       }));
       
       // Redirect based on user role
