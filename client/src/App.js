@@ -75,6 +75,21 @@ function App() {
   // Add state for maximum product price
   const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
 
+  // Define authoritative list of available categories
+  const availableCategories = [
+    'Electronics',
+    'Clothing',
+    'Home & Garden',
+    'Sports & Outdoors',
+    'Vehicles',
+    'Tools & Equipment',
+    'Toys & Games',
+    'Other',
+    'Furniture', // Added from Filters list
+    'Tools',     // Added from Filters list
+    'Sports'     // Added from Filters list
+  ];
+
   // Handler for location selection from Filters
   const handleLocationSelect = (location) => {
     setFilterLocation(location);
@@ -301,13 +316,19 @@ function App() {
     console.log(`Products before filtering: ${filtered.length}`); // Log count before filtering
     
     // Apply category filter
-    if (filters.category) {
-      // Assuming product.category is now an array or single string
-      filtered = filtered.filter(product => 
+    // Updated logic for multiple category selection
+    if (Array.isArray(filters.category) && filters.category.length > 0) {
+      filtered = filtered.filter(product =>
         Array.isArray(product.category) 
-        ? product.category.includes(filters.category) // Check if the array includes the selected category
-        : product.category === filters.category // Fallback for single string category
+          ? product.category.some(cat => filters.category.includes(cat)) // Check if product has at least one of the selected categories
+          : filters.category.includes(product.category) // Fallback for single string product category
       );
+    } else if (typeof filters.category === 'string' && filters.category) { // Keep fallback for old single string filter
+       filtered = filtered.filter(product =>
+         Array.isArray(product.category)
+           ? product.category.includes(filters.category)
+           : product.category === filters.category
+       );
     }
     
     // Apply price range filter
@@ -576,7 +597,7 @@ function App() {
             <Route path="/listings/create" element={
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
-                <CreateListing />
+                <CreateListing availableCategories={availableCategories} />
                 <Footer />
               </RenterRoute>
             } />
@@ -585,7 +606,7 @@ function App() {
             <Route path="/edit-listing/:id" element={
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
-                <EditListing />
+                <EditListing availableCategories={availableCategories} />
                 <Footer />
               </RenterRoute>
             } />
@@ -604,7 +625,7 @@ function App() {
       <Header cartItemCount={cartLength} />
       <Hero onSearch={handleSearch} />
       <div className="container">
-        <FeaturedCategories onCategorySelect={handleCategorySelect} />
+        <FeaturedCategories onCategorySelect={handleCategorySelect} categories={availableCategories} />
       </div>
       <div className="container">
         <div className="main-content">
@@ -615,6 +636,7 @@ function App() {
   userLocation={userLocation}
   onLocationSelect={handleLocationSelect}
   maxPrice={maxPrice}
+  categories={availableCategories}
 />
           {isLoading ? (
             <div className="loading-container">

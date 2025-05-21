@@ -11,7 +11,12 @@ router.get('/', async (req, res) => {
     // Build filter object
     const filter = {};
     
-    if (category) {
+    // Updated category filtering logic to handle multiple selected categories
+    if (category && Array.isArray(category) && category.length > 0) {
+      // If category is an array (multiple selected), use $in directly
+      filter.category = { $in: category };
+    } else if (category) {
+      // If category is a single string (only one selected or old filter logic), wrap in an array for $in
       filter.category = { $in: [category] };
     }
     if (location) filter.location = { $regex: location, $options: 'i' };
@@ -138,7 +143,12 @@ router.get('/nearby', async (req, res) => {
     };
     
     // Add optional filters
-    if (category) {
+    // Updated category filtering logic to handle multiple selected categories
+    if (category && Array.isArray(category) && category.length > 0) {
+      // If category is an array (multiple selected), use $in directly
+      filter.category = { $in: category };
+    } else if (category) {
+      // If category is a single string (only one selected or old filter logic), wrap in an array for $in
       filter.category = { $in: [category] };
     }
     if (availability) filter.availability = availability;

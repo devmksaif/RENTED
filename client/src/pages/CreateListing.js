@@ -123,7 +123,7 @@ function DraggableMarker({ position, onMarkerDrag }) {
 }
 
 // Inside the CreateListing component
-function CreateListing() {
+function CreateListing({ availableCategories }) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -180,18 +180,6 @@ function CreateListing() {
 const [searchQuery, setSearchQuery] = useState('');
 const [isSearching, setIsSearching] = useState(false);
 const [searchResults, setSearchResults] = useState([]);
-
-// Define available categories
-const availableCategories = [
-  'Electronics',
-  'Clothing',
-  'Home & Garden',
-  'Sports & Outdoors',
-  'Vehicles',
-  'Tools & Equipment',
-  'Toys & Games',
-  'Other'
-];
 
 // Add this new function for handling search input changes
 const handleSearchInputChange = (e) => {
