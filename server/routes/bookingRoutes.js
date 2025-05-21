@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const Notification = require('../models/Notification');
-const User = require('../models/User');
+const User = require('../models/User').default;
 
 // Get all bookings for a user
 router.get('/user', auth, async (req, res) => {

@@ -22,10 +22,11 @@ function Login() {
         setIsLoading(false);
         return;
       }
-  
-      console.log('Attempting login with:', { email, password: '****' });
-      
-      const response = await loginUser(email, password);
+      const data = { 
+        email,
+        password
+      }
+      const response = await loginUser(data);
       console.log('Login response:', response);
       
       // Store token and user data in localStorage

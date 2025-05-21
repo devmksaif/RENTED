@@ -1,6 +1,6 @@
 const Product = require('../models/Product');
 const Booking = require('../models/Booking');
-const User = require('../models/User');
+const User = require('../models/User').default;
 
 // Get dashboard statistics
 exports.getDashboardStats = async (req, res) => {
