@@ -56,7 +56,7 @@ function App() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [filters, setFilters] = useState({
     category: '',
-    priceRange: 50,
+    priceRange: [0, 500],
     location: '',
     availability: '',
     rating: '',
@@ -292,20 +292,34 @@ function App() {
   
   // Use useCallback to memoize the applyFilters function
   const applyFilters = React.useCallback(() => {
-    // Start with all products
-    let filtered = products;
+    console.log('Applying filters with state:', filters); // Log when applyFilters runs and current filters
+    // Start with all products, either initial fetch or nearby products
+    let filtered = nearbyProducts.length > 0 ? nearbyProducts : products; // Start filtering from the appropriate product list
+    
+    console.log(`Products before filtering: ${filtered.length}`); // Log count before filtering
     
     // Apply category filter
     if (filters.category) {
-      filtered = filtered.filter(product => product.category === filters.category);
+      // Assuming product.category is now an array or single string
+      filtered = filtered.filter(product => 
+        Array.isArray(product.category) 
+        ? product.category.includes(filters.category) // Check if the array includes the selected category
+        : product.category === filters.category // Fallback for single string category
+      );
     }
     
     // Apply price range filter
-    if (filters.priceRange) {
-      filtered = filtered.filter(product => product.price <= filters.priceRange);
+    if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
+      const [minPrice, maxPrice] = filters.priceRange;
+      console.log(`Applying price filter: ${minPrice} to ${maxPrice}`); // Log price filter range
+      filtered = filtered.filter(product => product.price >= minPrice && product.price <= maxPrice);
+    } else if (typeof filters.priceRange === 'number') { // Keep fallback for old single number filter if necessary
+       console.log(`Applying price filter (single value): <= ${filters.priceRange}`); // Log single value price filter
+       filtered = filtered.filter(product => product.price <= filters.priceRange);
     }
     
     // Apply location filter
+    // Note: This currently filters by text. Geospatial filtering would be more advanced.
     if (filters.location) {
       filtered = filtered.filter(product => 
         product.location.toLowerCase().includes(filters.location.toLowerCase())
@@ -322,17 +336,20 @@ function App() {
       filtered = filtered.filter(product => product.rating >= parseInt(filters.rating));
     }
     
-    // Apply search query
+    // Apply search query - Note: This should ideally be done on the backend for large datasets
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+        // Check if any category in the array includes the search query
+        (Array.isArray(product.category) && product.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+        (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase())) // Fallback for single string category
       );
     }
     
     setFilteredProducts(filtered);
-  }, [filters, products, searchQuery]); // Dependencies for useCallback
+    console.log(`Products after filtering: ${filtered.length}`); // Log count after filtering
+  }, [filters, products, searchQuery, nearbyProducts]); // Dependencies for useCallback
   
 
   useEffect(() => {
@@ -368,19 +385,25 @@ function App() {
   
   // Remove the second addToCart declaration and keep only the async version
   const handleFilterChange = (filterName, value) => {
+    console.log(`Filter changed: ${filterName}`, value); // Log filter changes
     if (filterName === 'radius') {
       setFilterRadius(value);
     }
-    setFilters({
-      ...filters,
-      [filterName]: value
+    setFilters(prevFilters => {
+      const newFilters = {
+        ...prevFilters,
+        [filterName]: value
+      };
+      console.log('New filters state:', newFilters); // Log the new filter state
+      return newFilters;
     });
   };
   
   const resetFilters = () => {
+    console.log('Resetting filters'); // Log reset
     setFilters({
       category: '',
-      priceRange: 50,
+      priceRange: [0, 500],
       location: '',
       availability: '',
       rating: '',
@@ -562,7 +585,7 @@ function App() {
               )}
               
               <ProductList 
-                products={products}
+                products={filteredProducts}
                 onAddToCart={addToCart}
                 filterLocation={filterLocation}
                 filterRadius={filterRadius}

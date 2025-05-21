@@ -29,8 +29,9 @@ const productSchema = new mongoose.Schema({
     min: 0
   },
   category: {
-    type: [String],
-    required: true
+    type: String,
+    required: true,
+    trim: true
   },
   location: {
     type: String,

@@ -453,5 +453,5 @@ router.post('/meeting-areas', auth, async (req, res) => {
   }
 });
 
-// Add this line at the very end of the file
+
 module.exports = router;
