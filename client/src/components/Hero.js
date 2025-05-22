@@ -56,22 +56,6 @@ function Hero({ onSearch }) {
             <i className="fas fa-arrow-right search-button-icon"></i>
           </button>
         </form>
-        
-        <div className="hero-tags">
-          <span className="hero-tag">Popular:</span>
-          <button className="tag-button" onClick={() => onSearch('Camera')}>
-            <i className="fas fa-camera"></i> Cameras
-          </button>
-          <button className="tag-button" onClick={() => onSearch('Bike')}>
-            <i className="fas fa-bicycle"></i> Bikes
-          </button>
-          <button className="tag-button" onClick={() => onSearch('Tools')}>
-            <i className="fas fa-tools"></i> Tools
-          </button>
-          <button className="tag-button" onClick={() => onSearch('Furniture')}>
-            <i className="fas fa-couch"></i> Furniture
-          </button>
-        </div>
       </div>
     </div>
   );

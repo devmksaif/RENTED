@@ -441,16 +441,7 @@ function ProductDetail({ onAddToCart }) {
           </div>
 
           <div className="similar-products">
-            <h3>Similar Products</h3>
-            <div className="similar-products-placeholder">
-              <p>Browse similar products in this category</p>
-              <Link
-                to={`/category/${product.category}`}
-                className="browse-more"
-              >
-                View More <i className="fas fa-arrow-right"></i>
-              </Link>
-            </div>
+            
           </div>
         </div>
       </div>
