@@ -134,10 +134,10 @@ function Checkout() {
       errors.push('Please enter a valid email address');
     }
     
-    // Zip code validation (US format - can be adjusted for other countries)
-    const zipRegex = /^\d{5}(-\d{4})?$/;
+    // Zip code validation (changed from US format to 4-digit)
+    const zipRegex = /^\d{4}$/;
     if (zipCode && !zipRegex.test(zipCode)) {
-      errors.push('Please enter a valid zip code (e.g., 12345 or 12345-6789)');
+      errors.push('Please enter a valid 4-digit zip code');
     }
     
     // Validate delivery date
