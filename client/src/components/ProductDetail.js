@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link,useNavigate } from "react-router-dom";
-import { saveCart } from "../services/api"; // Add this import
+import { getUserById, saveCart } from "../services/api"; // Add this import
 import { getProductById, sendMessage } from "../services/api"; // Add this import
 import "../styles/ProductDetail.css";
 
@@ -19,15 +19,18 @@ function ProductDetail({ onAddToCart }) {
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [owner,setOwner] = useState({})
   const imageRef = useRef(null);
   const navigate = useNavigate();
   useEffect(() => {
+    
     const fetchProduct = async () => {
       setLoading(true);
       try {
         const data = await getProductById(id);
         setProduct(data);
-
+         
+        await getUserById(data?.owner).then(response => {setOwner(response); console.log(response)})
         // Set default rental duration to minRentalDays if available
         if (data.minRentalDays) {
           setRentalDuration(data.minRentalDays);
@@ -44,6 +47,11 @@ function ProductDetail({ onAddToCart }) {
 
     fetchProduct();
   }, [id]);
+
+  useEffect(()=>{
+     
+    
+  },[])
 
   // Calculate rental duration when dates change
   useEffect(() => {
@@ -426,9 +434,9 @@ function ProductDetail({ onAddToCart }) {
                 <i className="fas fa-user-circle"></i>
               </div>
               <div className="owner-details">
-                <div className="owner-name">Verified Owner</div>
+                <div className="owner-name">{owner.name}</div>
                 <div className="owner-rating">
-                  <i className="fas fa-star"></i> 4.8 (120 rentals)
+                  <i className="fas fa-star"></i> {product.rating} {product.reviews}
                 </div>
                 <div className="owner-response">
                   <i className="fas fa-clock"></i> Typically responds within 2 hours

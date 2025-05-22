@@ -416,6 +416,14 @@ export const createBooking = async (bookingData) => {
     throw error;
   }
 };
+export const getUserById = async (user) => {
+  try {
+    const response = await axios.get(`${API_URL}/users/user/${user}`);
+    return response.data;
+  } catch (error) {
+     return {};
+  }
+}
 
 export const getUserBookings = async () => {
   try {

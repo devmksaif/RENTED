@@ -4,8 +4,36 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const authController = require('../controllers/authController');
+router.get('/user/:id', async (req, res) => {
+  try {
+    const {  id  } = req.params;
+    
+    // Check if user already exists
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-// Register a new user
+    const user = new User(existingUser)
+ 
+ 
+    res.status(201).json({
+      _id: user._id,
+      userId : user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role || (user.isAdmin ? 'admin' : 'user'),
+      accountType: user.accountType,
+      phone : user.phone,
+      verificationStatus : user.verificationStatus,
+      address : user.address,
+      meetingAreas: user.meetingAreas,
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, phone, address, accountType, meetingArea } = req.body;
