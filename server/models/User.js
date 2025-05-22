@@ -36,8 +36,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    required: false,
+    default : '',
+    
   },
   phone: {
     type: String,
@@ -68,6 +69,12 @@ const userSchema = new mongoose.Schema({
     enum: ['pending', 'verified', 'rejected', 'still'],
     default: 'still'
   },
+  // Add firebaseUid for linking with Firebase Authentication
+  firebaseUid: {
+    type: String,
+    unique: true, // Ensure uniqueness for Firebase users
+    sparse: true // Allows multiple documents to have null firebaseUid
+  }
 }, {
   timestamps: true
 });

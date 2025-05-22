@@ -30,6 +30,7 @@ import EditListing from './components/EditListing';
 import Messages from './pages/Messages';
 import { initializeSocket, closeSocket } from './services/socket';
 import MessageDetail from './pages/MessageDetail';
+import CompleteRegistration from './pages/CompleteRegistration';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -760,6 +761,9 @@ const handleLogout = () => {
             <Route path="/verify/selfie" element={<SelfieCapture />} />
             <Route path="/verify/processing" element={<VerificationProcessing />} />
             <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
+
+            {/* New Route for Completing Google Registration */}
+            <Route path="/complete-registration" element={<CompleteRegistration />} />
           </Routes>
         </div>
       </NotificationProvider>

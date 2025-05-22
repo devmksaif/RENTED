@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, completeGoogleRegistration, loginUserGoogle, checkEmail } from '../services/api';
 import '../styles/Auth.css';
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from '../firebase';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -74,6 +76,79 @@ function Login() {
     }
   };
 
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      console.log('Initiating Google signInWithPopup...');
+      const result = await signInWithPopup(auth, provider);
+      // The signed-in user info.
+      const user = result.user;
+      console.log('Google login successful:', user);
+      
+      // Check if the user is new
+      const isNewUser = await checkEmail(user.email)
+      
+      if (isNewUser.message == 'new') {
+        // If it's a new user, navigate to the complete registration page
+        console.log('New user detected. Navigating to complete registration.');
+        // Pass only necessary serializable data
+        const serializableUserData = {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+        };
+        navigate('/complete-registration', { state: { googleUserData: serializableUserData } });
+      } else {
+        // If it's an existing user, proceed with normal login/redirection
+        console.log('Existing user detected. Proceeding with normal login.');
+        // Call the backend endpoint to log in the existing Google user and get a session token
+        try {
+          const response = await loginUserGoogle({
+            firebaseUid: user.uid,
+            
+            email: user.email,
+          
+            // accountType and meetingArea are not needed for existing users here
+            // The backend will retrieve these from the existing user document
+          });
+
+          console.log('Existing Google user login successful:', response);
+
+          // Store token and user data from backend in localStorage
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response));
+
+          // Navigate to home page
+          navigate('/');
+
+        } catch (backendError) {
+          console.error('Error logging in existing Google user on backend:', backendError);
+          setError(`Login failed: ${backendError.response?.data?.message || backendError.message}`);
+        }
+      }
+
+    } catch (error) {
+      // Handle Errors here.
+      // Note: auth/popup-closed-by-user and auth/cancelled-popup-request are common here
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      const email = error.customData?.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      console.error('Google login error:', errorCode, errorMessage, email, credential);
+      // Check if the error is due to the user closing the popup
+      if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
+        console.log('Google login popup was closed by the user.');
+        // You might choose not to set an error message for this specific case
+        // setError('Google login cancelled.');
+      } else {
+         setError(`Google login failed: ${errorMessage}`);
+      }
+    }
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -133,14 +208,11 @@ function Login() {
         </div>
         
         <div className="social-login">
-          <button className="social-button google">
+          <button className="social-button google" onClick={handleGoogleLogin}>
             <i className="fab fa-google"></i>
             <span>Login with Google</span>
           </button>
-          <button className="social-button facebook">
-            <i className="fab fa-facebook-f"></i>
-            <span>Login with Facebook</span>
-          </button>
+          
         </div>
         
         <div className="auth-redirect">

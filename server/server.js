@@ -40,6 +40,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Add logging middleware to see incoming request paths
+app.use((req, res, next) => {
+  console.log(`Incoming Request: ${req.method} ${req.originalUrl} (Path: ${req.path})`);
+  next();
+});
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rented')
 .then(() => console.log('✅ Connected to MongoDB'))

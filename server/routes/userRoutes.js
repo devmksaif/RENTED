@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const authController = require('../controllers/authController');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -69,7 +70,7 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firebaseUid } = req.body;
     
     // Find user by email
     const user = await User.findOne({ email });
@@ -77,6 +78,29 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
     
+
+    if(firebaseUid){
+      user.firebaseUid = firebaseUid;
+      const token = jwt.sign(
+        { userId: user._id, user },
+        process.env.JWT_SECRET || 'your_jwt_secret',
+        { expiresIn: '7d' }
+      );
+      return res.status(200).json({
+        _id: user._id,
+        userId : user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || (user.isAdmin ? 'admin' : 'user'),
+        accountType: user.accountType,
+        phone : user.phone,
+        verificationStatus : user.verificationStatus,
+        address : user.address,
+        meetingAreas: user.meetingAreas,
+        token
+      });
+      
+    }
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
@@ -112,6 +136,66 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+router.post('/check', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).json({ message: 'new' });
+    }else{
+      return res.status(200).json({ message: 'old' });
+    }
+     
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+router.post('/login-google', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    
+  
+    // Only check status if it exists in the user model
+    if (user.status && user.status !== 'active' && user.status !== undefined) {
+      return res.status(401).json({ message: 'Account is inactive or suspended' });
+    }
+    
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id, user },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      _id: user._id,
+      userId : user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role || (user.isAdmin ? 'admin' : 'user'),
+      accountType: user.accountType,
+      phone : user.phone,
+      verificationStatus : user.verificationStatus,
+      address : user.address,
+      meetingAreas: user.meetingAreas,
+      token
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add new route for Google registration completion/login
+router.post('/auth/google-login-complete', authController.completeGoogleRegistration);
 
 // Get user profile
 router.get('/profile', auth, async (req, res) => {
@@ -153,6 +237,7 @@ router.put('/update/:userId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 // Update user profile
 router.patch('/profile', auth, async (req, res) => {
   const updates = Object.keys(req.body);
@@ -460,6 +545,5 @@ router.post('/meeting-areas', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 module.exports = router;

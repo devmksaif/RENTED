@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000/api";
+// Assuming backend mounts userRoutes under /api/users
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000/api/users";
 
 // Helper function to get auth header
 const getAuthHeader = () => {
@@ -733,6 +734,17 @@ export const loginUser = async (credentials) => {
     throw error;
   }
 };
+export const loginUserGoogle = async (credentials) => {
+  try {
+    const response = await axios.post(`${API_URL}/users/login-google`, {
+      ...credentials
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error logging in:", error);
+    throw error;
+  }
+};
 
 // User Profile APIs
 export const getUserProfile = async () => {
@@ -746,6 +758,17 @@ export const getUserProfile = async () => {
     throw error;
   }
 };
+
+export const checkEmail = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/users/check`, { email });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
 
 export const updateUserProfile = async (userData) => {
   try {
@@ -1079,5 +1102,18 @@ export const markConversationAsRead = async (conversationId) => {
   } catch (error) {
     console.error('Error marking conversation as read:', error);
     throw error;
+  }
+};
+
+// Add new function for completing Google registration on the backend
+export const completeGoogleRegistration = async (userData) => {
+  try {
+    // This endpoint should be the new route you created on the backend
+    const response = await axios.post(`${API_URL}/users/register`, userData);
+    // The backend should return the user object and a token
+    return response.data;
+  } catch (error) {
+    console.error("Error completing Google registration on backend:", error);
+    throw error; // Re-throw to be caught by the calling component
   }
 };
