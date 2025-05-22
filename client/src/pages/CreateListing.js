@@ -147,6 +147,8 @@ function CreateListing({ availableCategories }) {
   const [useCurrentLocation, setUseCurrentLocation] = useState(true);
   const [locationName, setLocationName] = useState('');
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [userVerifcation,setUserVerification] = useState("")
+
   const [popularLocations, setPopularLocations] = useState([
     // Tunisia States
     { name: 'Tunis', coords: [36.8065, 10.1815] },
@@ -229,13 +231,17 @@ const handleSearchResultClick = (result) => {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     setUserRole(user.accountType || '');
-    
+    setUserVerification(user.verificationStatus)
     // Redirect if not a renter
     if (user.accountType !== 'renter' && user.accountType !== 'both') {
       setError('Only renters can create listings');
       setTimeout(() => {
         navigate('/');
       }, 3000);
+    }
+    if (user.verificationStatus !== 'verified') {
+      setError('Your account should be verified before you create a listing');
+       
     }
     
     // Try to get user's location
@@ -419,6 +425,7 @@ const handleSearchResultClick = (result) => {
         <div className="form-group">
           <label htmlFor="title">Title</label>
           <input
+          disabled={userVerifcation !== 'verified'}
             type="text"
             id="title"
             name="title"
@@ -432,6 +439,7 @@ const handleSearchResultClick = (result) => {
         <div className="form-group">
           <label htmlFor="description">Description</label>
           <textarea
+           disabled={userVerifcation !== 'verified'}
             id="description"
             name="description"
             value={formData.description}
@@ -451,7 +459,7 @@ const handleSearchResultClick = (result) => {
               {formData.category.map(cat => (
                 <div key={cat} className="category-tag">
                   <span>{cat}</span>
-                  <button type="button" onClick={() => handleCategoryToggle(cat)}>
+                  <button  disabled={userVerifcation !== 'verified'} type="button" onClick={() => handleCategoryToggle(cat)}>
                     &times;
                   </button>
                 </div>
@@ -467,6 +475,7 @@ const handleSearchResultClick = (result) => {
                 // Render only if not already selected
                 !formData.category.includes(cat) && (
                   <button
+                  disabled={userVerifcation !== 'verified'}
                     key={cat}
                     type="button"
                     className="available-category-item"
@@ -484,6 +493,7 @@ const handleSearchResultClick = (result) => {
           <label htmlFor="price">Price per day ($)</label>
           <input
             type="number"
+            disabled={userVerifcation !== 'verified'}
             id="price"
             name="price"
             value={formData.price}
@@ -509,7 +519,7 @@ const handleSearchResultClick = (result) => {
             <div className="location-search-input-group">
              
               <input
-              
+               disabled={userVerifcation !== 'verified'}
                 type="text"
                 className="location-search-input"
                 placeholder="Search for a location or address"
@@ -517,10 +527,11 @@ const handleSearchResultClick = (result) => {
                 onChange={handleSearchInputChange}
               />
               <button 
+               
                 type="button" 
                 className="location-search-button"
                 onClick={handleLocationSearch}
-                disabled={isSearching || searchQuery.length < 3}
+                disabled={userVerifcation !== 'verified' || isSearching || searchQuery.length < 3}
                 title="Search for this location"
               >
                 {isSearching ? (
@@ -551,6 +562,9 @@ const handleSearchResultClick = (result) => {
           <div className="location-controls">
             <button 
               type="button"
+              
+              disabled={userVerifcation !== 'verified'}
+
               className={`location-btn ${useCurrentLocation ? 'active' : ''}`}
               onClick={() => {
                 setUseCurrentLocation(true);
@@ -561,6 +575,8 @@ const handleSearchResultClick = (result) => {
             </button>
             
             <button 
+                      disabled={userVerifcation !== 'verified'}
+
               type="button" 
               className={`location-btn ${!useCurrentLocation ? 'active' : ''}`}
               onClick={() => setUseCurrentLocation(false)}
@@ -576,6 +592,8 @@ const handleSearchResultClick = (result) => {
               <div className="locations-grid">
                 {popularLocations.map((loc, index) => (
                   <button
+                  disabled={userVerifcation !== 'verified'}
+
                     key={index}
                     type="button"
                     className="popular-location-btn"
@@ -598,6 +616,8 @@ const handleSearchResultClick = (result) => {
         <div className="form-group">
           <label htmlFor="availability">Availability</label>
           <select
+                    disabled={userVerifcation !== 'verified'}
+
             id="availability"
             name="availability"
             value={formData.availability}
@@ -613,6 +633,8 @@ const handleSearchResultClick = (result) => {
         <div className="form-group">
           <label htmlFor="image">Image URL</label>
           <input
+                    disabled={userVerifcation !== 'verified'}
+
             type="url"
             id="image"
             name="image"
@@ -640,9 +662,11 @@ const handleSearchResultClick = (result) => {
             Cancel
           </button>
           <button 
+                    
+
             type="submit" 
             className="submit-button"
-            disabled={isLoading}
+            disabled={userVerifcation !== 'verified' || isLoading}
           >
             {isLoading ? (
               <>

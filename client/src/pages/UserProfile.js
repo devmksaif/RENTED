@@ -10,6 +10,7 @@ import { OpenStreetMapProvider } from 'leaflet-geosearch';
 
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useNavigate } from 'react-router-dom';
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -155,6 +156,7 @@ function UserProfile() {
   const [meetingAreaAction, setMeetingAreaAction] = useState('add'); // 'add', 'update', 'delete'
   const mapRef = useRef(null);
   const provider = useRef(new OpenStreetMapProvider());
+  const navigation = useNavigate()
   
   // Rename this function to avoid the recursive call
   const handleUpdateMeetingArea = async (meetingAreaData) => {
@@ -455,88 +457,134 @@ function UserProfile() {
     }
     
     try {
-      await updateUserMeetingArea({
+      // Create new meeting area object
+      const newArea = {
+        _id: `temp-${Date.now()}`, // Temporary ID until server response
+        name: formData.address,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        isDefault: meetingAreas.length === 0 // Make default if it's the first one
+      };
+      
+      // Optimistically update UI
+      setMeetingAreas(prev => [...prev, newArea]);
+      setSuccessMessage('Meeting area added successfully');
+      setShowMap(false);
+      setAddressFromMap('');
+      
+      // Make API call
+      const response = await updateUserMeetingArea({
         action: 'add',
         area: {
           name: formData.address,
           latitude: formData.latitude,
           longitude: formData.longitude,
-          isDefault: meetingAreas.length === 0 // Make default if it's the first one
+          isDefault: meetingAreas.length === 0
         }
       });
       
-       
-      setShowMap(false);
-      setAddressFromMap('');
+      // Update with server response data
+      if (response.meetingAreas) {
+        setMeetingAreas(response.meetingAreas);
+      }
     } catch (error) {
+      // Revert optimistic update on error
       console.error('Error adding meeting area:', error);
+      setError('Failed to add meeting area. Please try again.');
+      // Remove the temporary area
+      setMeetingAreas(prev => prev.filter(area => !area._id.startsWith('temp-')));
     }
   };
 
-  
-
   const handleDeleteMeetingArea = async (areaId) => {
-    if (window.confirm('Are you sure you want to delete this meeting area?')) {
-      try {
+       try {
+        // Find the area to be deleted
+        const areaToDelete = meetingAreas.find(area => area._id === areaId);
+        
+        // Optimistically update UI
+        setMeetingAreas(prev => prev.filter(area => area._id !== areaId));
+        setSelectedMeetingArea(null);
+        setSuccessMessage('Meeting area deleted successfully');
+        
+        // Make API call
         await updateUserMeetingArea({
           action: 'delete',
           areaId
         });
-        
-        setSelectedMeetingArea(null);
       } catch (error) {
+        // Revert optimistic update on error
         console.error('Error deleting meeting area:', error);
+        setError('Failed to delete meeting area. Please try again.');
+        
+        // Fetch user profile again to restore correct data
+        fetchUserProfile();
       }
-    }
+   
   };
 
   const handleSetDefaultMeetingArea = async (areaId) => {
     try {
+      // Find the area to set as default
+      const newDefaultArea = meetingAreas.find(area => area._id === areaId);
+      if (!newDefaultArea) return;
+      
+      // Store previous state for potential rollback
+      const previousMeetingAreas = [...meetingAreas];
+      
+      // Optimistically update UI
       setIsUpdating(true);
+      setMeetingAreas(prev => prev.map(area => ({
+        ...area,
+        isDefault: area._id === areaId
+      })));
+      
+      // Update user state optimistically
+      if (newDefaultArea) {
+        // Update user profile with the default meeting area
+        setUser(prevUser => ({
+          ...prevUser,
+          defaultMeetingArea: newDefaultArea
+        }));
+        
+        // Update profile state
+        setProfile(prevProfile => ({
+          ...prevProfile,
+          defaultMeetingArea: newDefaultArea
+        }));
+        
+        // Update form data with the default meeting area
+        setFormData(prevForm => ({
+          ...prevForm,
+          address: newDefaultArea.name,
+          latitude: newDefaultArea.latitude,
+          longitude: newDefaultArea.longitude
+        }));
+        
+        // Update localStorage
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        userData.defaultMeetingArea = newDefaultArea;
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      
+      setSuccessMessage('Default meeting area updated successfully');
+      
+      // Make API call
       const response = await updateUserMeetingArea({
         action: 'set-default',
         areaId
       });
       
-      // Update local state with the response data
+      // Update with server response data
       if (response.meetingAreas) {
         setMeetingAreas(response.meetingAreas);
-        
-        // Find the new default meeting area
-        const defaultArea = response.meetingAreas.find(area => area.isDefault);
-        if (defaultArea) {
-          // Update user profile with the default meeting area
-          setUser(prevUser => ({
-            ...prevUser,
-            defaultMeetingArea: defaultArea
-          }));
-          
-          // Update profile state
-          setProfile(prevProfile => ({
-            ...prevProfile,
-            defaultMeetingArea: defaultArea
-          }));
-          
-          // Update form data with the default meeting area
-          setFormData(prevForm => ({
-            ...prevForm,
-            address: defaultArea.name,
-            latitude: defaultArea.latitude,
-            longitude: defaultArea.longitude
-          }));
-          
-          // Update localStorage
-          const userData = JSON.parse(localStorage.getItem('user') || '{}');
-          userData.defaultMeetingArea = defaultArea;
-          localStorage.setItem('user', JSON.stringify(userData));
-        }
       }
-      
-      setSuccessMessage('Default meeting area updated successfully');
-      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
+      // Revert optimistic update on error
       console.error('Error setting default meeting area:', error);
       setError('Failed to set default meeting area. Please try again.');
+      
+      // Fetch user profile again to restore correct data
+      fetchUserProfile();
     } finally {
       setIsUpdating(false);
     }

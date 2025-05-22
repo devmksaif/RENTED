@@ -146,7 +146,7 @@ export const addToCart = async (
   startDate = null,
   endDate = null
 ) => {
-  console.log(getAuthHeader())
+   
   try {
     const response = await axios.post(
       `${API_URL}/cart/add`,
@@ -168,7 +168,7 @@ export const addToCart = async (
   }
 };
 
-export const updateCartItem = async (productId, quantity, duration) => {
+export const updateCartItem = async (productId, quantity, duration, startDate, endDate) => {
   try {
     // First get the current cart
     const currentCart = await getCart();
@@ -180,6 +180,8 @@ export const updateCartItem = async (productId, quantity, duration) => {
           ...item,
           quantity: quantity,
           duration: duration,
+          startDate: startDate,
+          endDate: endDate
         };
       }
       return item;
@@ -192,6 +194,8 @@ export const updateCartItem = async (productId, quantity, duration) => {
         quantity: item.quantity,
         price: item.price,
         duration: item.duration,
+        startDate: item.startDate,
+        endDate: item.endDate
       })),
     });
   } catch (error) {
@@ -319,6 +323,8 @@ export const saveCart = async (cartData) => {
             quantity: item.quantity || 1,
             price: item.price,
             duration: item.duration || 7,
+            startDate: item.startDate,
+            endDate: item.endDate
           }));
 
           await updateCart({ items: formattedItems });
