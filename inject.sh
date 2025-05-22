@@ -18,7 +18,7 @@ admin_response=$(curl -X POST "$USER_API_URL/create-admin" \
 ADMIN_ID=$(echo $admin_response | jq -r '._id')
 echo "Admin user created with ID: $ADMIN_ID"
 
-# Create regular user
+# Create regular user and get token
 echo "Creating regular user..."
 user_response=$(curl -X POST "$USER_API_URL/register" \
   -H "Content-Type: application/json" \
@@ -32,8 +32,24 @@ user_response=$(curl -X POST "$USER_API_URL/register" \
     "verificationStatus": "verified"
   }')
 
-USER_ID=$(echo $user_response | jq -r '._id')
-echo "Regular user created with ID: $USER_ID"
+# Login to get the token
+echo "Logging in to get auth token..."
+login_response=$(curl -X POST "$USER_API_URL/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@rented.com",
+    "password": "user123"
+  }')
+
+TOKEN=$(echo $login_response | jq -r '.token')
+USER_ID=$(echo $login_response | jq -r '.user._id')
+
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  echo "Failed to get authentication token"
+  exit 1
+fi
+
+echo "Got auth token and user ID: $USER_ID"
 
 # Products data
 products='[
@@ -139,11 +155,12 @@ products='[
   }
 ]'
 
-# Inject each product using curl
+# Inject each product using curl with auth token
 echo "Injecting products..."
 echo "$products" | jq -c '.[]' | while read -r product; do
   curl -X POST "$PRODUCT_API_URL" \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TOKEN" \
     -d "$product"
   echo -e "\nInjected: $(echo "$product" | jq -r .title)"
 done
