@@ -46,10 +46,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
-      return this.authType === 'local'; // Only require password for local auth
-    }
-  },
+    required: false,
+    default: null,
+   },
   authType: {
     type: String,
     enum: ['local', 'google'],
