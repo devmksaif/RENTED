@@ -10,6 +10,23 @@ function Cart() {
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
+  // Add this helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not specified';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
+
   useEffect(() => {
     fetchCart();
   }, []);
@@ -273,17 +290,9 @@ function Cart() {
               
               <div className="rental-duration">
                 <label htmlFor={`duration-${item.product._id}`}>Rental period:</label>
-                <select 
-                  id={`duration-${item.product._id}`}
-                  value={item.duration || 7}
-                  onChange={(e) => handleUpdateDuration(item.product._id, e.target.value)}
-                >
-                  <option value="1">1 day</option>
-                  <option value="3">3 days</option>
-                  <option value="7">7 days</option>
-                  <option value="14">14 days</option>
-                  <option value="30">30 days</option>
-                </select>
+                <div id={item.product._id}>
+                  {item.startDate ? formatDate(item.startDate) : 'Not specified'} - {item.endDate ? formatDate(item.endDate) : 'Not specified'}
+                </div>
               </div>
               
               <p className="item-subtotal">
