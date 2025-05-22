@@ -2,7 +2,7 @@
   background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
   background-size: cover;
   background-position: center;
-  height: 500px;
+  height: 33vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +109,7 @@
 
 @media (max-width: 768px) {
   .hero {
-    height: 400px;
+    height: 30vh;
   }
   
   .hero-title {

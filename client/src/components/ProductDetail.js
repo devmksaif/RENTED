@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link,useNavigate } from "react-router-dom";
 import { saveCart } from "../services/api"; // Add this import
-import { getProductById } from "../services/api"; // Add this import
+import { getProductById, sendMessage } from "../services/api"; // Add this import
 import "../styles/ProductDetail.css";
 
 function ProductDetail({ onAddToCart }) {
@@ -20,7 +20,7 @@ function ProductDetail({ onAddToCart }) {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isInWishlist, setIsInWishlist] = useState(false);
   const imageRef = useRef(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
@@ -180,6 +180,32 @@ function ProductDetail({ onAddToCart }) {
       </div>
     );
   }
+  const handleContactOwner = async () => {
+    try {
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      // Navigate to MessageDetail with product owner ID
+      if (product && product.owner) {
+        // Create conversation or get existing one
+        const response = await sendMessage(product.owner, `Hi, I'm interested in renting your ${product.title}`);
+        
+        // Navigate to the conversation
+        if (response && response.conversationId) {
+          navigate(`/messages/${response.conversationId}/${product.owner}`);
+        } else {
+          setError('Failed to start conversation. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Error contacting owner:', error);
+      setError('Failed to contact owner. Please try again.');
+    }
+  };
 
   if (!product) {
     return (
@@ -342,7 +368,7 @@ function ProductDetail({ onAddToCart }) {
           </div>
 
           <div className="booking-form">
-           
+          
             <div className="product-actions">
               <div className="quantity-selector">
                 <button
@@ -405,12 +431,15 @@ function ProductDetail({ onAddToCart }) {
                   <i className="fas fa-star"></i> 4.8 (120 rentals)
                 </div>
                 <div className="owner-response">
-                  <i className="fas fa-clock"></i> Typically responds within 2
-                  hours
+                  <i className="fas fa-clock"></i> Typically responds within 2 hours
                 </div>
               </div>
-              <button className="contact-owner-btn">
-                <i className="fas fa-comment"></i> Contact
+              
+              <button
+                onClick={handleContactOwner}
+                className="contact-owner-btn"
+              >
+                Contact <i className="fas fa-comment"></i>
               </button>
             </div>
           </div>
@@ -441,16 +470,7 @@ function ProductDetail({ onAddToCart }) {
           </div>
 
           <div className="similar-products">
-            <h3>Similar Products</h3>
-            <div className="similar-products-placeholder">
-              <p>Browse similar products in this category</p>
-              <Link
-                to={`/category/${product.category}`}
-                className="browse-more"
-              >
-                View More <i className="fas fa-arrow-right"></i>
-              </Link>
-            </div>
+            
           </div>
         </div>
       </div>

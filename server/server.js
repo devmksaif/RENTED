@@ -6,6 +6,8 @@ const dotenv = require('dotenv');
 const session = require('express-session');
 const passport = require('./auth/config');
 const authRoutes = require('./auth/routes');
+const http = require('http');
+const socketIo = require('socket.io');
 const productRoutes = require('./routes/productRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -14,13 +16,22 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const cartRoutes = require('./routes/cartRoutes');
-
+const messageRoutes = require('./routes/messageRoutes');
  
 // Load environment variables
 dotenv.config();
 
 // Initialize Express app
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }
+});
+
 const PORT = process.env.PORT || 4000;
 
 // Middleware
@@ -65,13 +76,81 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
 // Add auth routes
 app.use('/auth', authRoutes);
+=======
+app.use('/api/messages', messageRoutes);
 
 // Default route
 app.get('/', (req, res) => {
   res.send('RENTED API is running');
 });
 
+// Socket.io connection handling
+const connectedUsers = new Map();
+
+io.on('connection', (socket) => {
+  console.log('New client connected');
+  
+  // Handle user authentication
+  socket.on('authenticate', (userId) => {
+    if (userId) {
+      // Store socket id with user id
+      connectedUsers.set(userId, socket.id);
+      socket.userId = userId;
+      console.log(`User ${userId} connected`);
+      
+      // Notify other users that this user is online
+      socket.broadcast.emit('user_status', { userId, status: 'online' });
+    }
+  });
+  
+  // Handle new messages
+  socket.on('send_message', async (data) => {
+    try {
+      const { recipientId, content, conversationId } = data;
+      
+      // Emit to recipient if they're online
+      const recipientSocketId = connectedUsers.get(recipientId);
+      if (recipientSocketId) {
+        // Fix: Change io.br to io.to
+        io.to(recipientSocketId).emit('new_message', {
+          sender: socket.userId,
+          content,
+          conversationId,
+          createdAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error handling message in socket:', error);
+    }
+  });
+  
+  // Handle typing indicator
+  socket.on('typing', (data) => {
+    const { conversationId, recipientId } = data;
+    const recipientSocketId = connectedUsers.get(recipientId);
+    
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('typing', {
+        conversationId,
+        userId: socket.userId
+      });
+    }
+  });
+  
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    if (socket.userId) {
+      connectedUsers.delete(socket.userId);
+      console.log(`User ${socket.userId} disconnected`);
+      
+      // Notify other users that this user is offline
+      socket.broadcast.emit('user_status', { userId: socket.userId, status: 'offline' });
+    }
+    console.log('Client disconnected');
+  });
+});
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

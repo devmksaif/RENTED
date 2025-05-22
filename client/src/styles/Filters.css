@@ -1,30 +1,125 @@
-.filters-container {
-  width: 280px;
-  padding: 1.5rem;
-  background-color: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 90px;
-  animation: fadeIn 0.5s ease-out forwards;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 1.5rem;
+/* Filters Modal Styles */
+.filter-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's above other content */
 }
 
+.filter-modal-content {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  max-width: 400px; /* Adjust as needed */
+  width: 90%;
+  max-height: 90vh; /* Limit height to viewport height */
+  position: relative; /* Needed for close button positioning */
+  display: flex; /* Added flexbox */
+  flex-direction: column; /* Stack children vertically */
+}
+
+.filters-modal-content-inner {
+    /* styles for the inner content of the modal if needed */
+    flex-grow: 1; /* Allow inner content to take up available space */
+    overflow-y: auto; /* Add scrolling to inner content if it overflows */
+    padding-right: 15px; /* Add padding to the right for scrollbar */
+    margin-right: -15px; /* Compensate for padding to align content */
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+    color: #333;
+}
+
+/* Action Buttons */
+.filter-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.apply-btn, .cancel-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.apply-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.apply-btn:hover {
+    background-color: #3e8e41;
+}
+
+.cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.cancel-btn:hover {
+    background-color: #d5d5d5;
+}
+
+/* Remove or adjust original filters-container styles */
+.filters-container {
+  /* Remove sidebar specific styles */
+  /* width: 280px; */
+  /* position: sticky; */
+  /* top: 90px; */
+  /* margin-bottom: 1.5rem; */
+  
+  /* Keep general container styles if needed for modal content */
+  padding: 0; /* Padding is on modal-content */
+  background-color: transparent; /* Background is on modal-content */
+  box-shadow: none; /* Shadow is on modal-content */
+  border: none; /* Border is on modal-content */
+  animation: none; /* Animation is on modal-content */
+}
+
+/* Keep other filter section styles */
 .filters-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid #eee;
+    /* Adjust as needed for modal header */
+    padding-bottom: 0.8rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .filters-header h3 {
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin: 0;
-  color: #333;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    color: #333;
 }
 
 .reset-filters-btn {
@@ -37,6 +132,7 @@
   align-items: center;
   transition: color 0.2s, opacity 0.2s;
   font-weight: 500;
+  margin-right: 10px; /* Space between reset and close */
 }
 
 .reset-filters-btn:hover {
@@ -92,48 +188,38 @@
   border-color: #4CAF50;
 }
 
-.location-search-form {
-  width: 100%;
-  margin-bottom: 1rem;
+/* Location Filter Form styles */
+.location-filter-form .location-input-group {
+    position: relative; /* Needed for icon positioning */
 }
 
-.location-input-wrapper {
-  position: relative;
-  margin-bottom: 1rem;
-  width: 100%;
+.location-filter-form .filter-input {
+    width: 100%;
+    padding: 0.6rem 0.6rem 0.6rem 2.2rem; /* Adjust padding for potential icon */
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    box-sizing: border-box;
 }
 
-.location-input-wrapper i {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #4CAF50;
+.location-filter-form .filter-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
-.filter-input {
-  width: 100%;
-  padding: 0.6rem 0.6rem 0.6rem 2.2rem;
-  border: 1px solid #ddd;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  transition: all 0.3s;
-  box-sizing: border-box;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.filter-input:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-.filter-section .MuiGrid-container {
-  margin-top: 0.5rem;
+/* Optional: Icon for location input */
+.location-filter-form .location-input-group::before {
+    content: '\f3c5'; /* Font Awesome map-marker-alt icon code */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4CAF50;
+    font-size: 1rem;
 }
 
 .radius-filter {
@@ -210,13 +296,37 @@
 }
 
 @media (max-width: 768px) {
+  /* Keep mobile styles for the filter content if needed */
+  /* but the modal overlay and content will handle the overall modal behavior */
   .filters-container {
-    width: 100%;
-    position: static;
-    max-height: none;
-    overflow-y: visible;
-    margin-bottom: 20px;
-    padding: 1.2rem;
+    width: auto; /* Let modal content define width */
+    position: static; /* Remove sticky for modal */
+    max-height: none; /* Let modal content control height */
+    overflow-y: visible; /* Let modal content handle scrolling */
+    margin-bottom: 0; /* Remove bottom margin for modal */
+    padding: 0; /* Padding is on modal-content */
+  }
+
+  /* Adjust modal content for smaller screens if needed */
+  .filter-modal-content {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .close-modal-btn {
+      top: 10px;
+      right: 10px;
+      font-size: 1.2rem;
+  }
+
+  .filter-actions {
+      flex-direction: column;
+      gap: 0.8rem;
+  }
+
+  .apply-btn, .cancel-btn {
+      width: 100%;
+      text-align: center;
   }
 }
 

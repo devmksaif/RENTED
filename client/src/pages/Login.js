@@ -88,7 +88,6 @@ function Login() {
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <div className="input-with-icon">
-              <i className="fas fa-envelope"></i>
               <input
                 type="email"
                 id="email"
@@ -103,7 +102,7 @@ function Login() {
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <div className="input-with-icon">
-              <i className="fas fa-lock"></i>
+              
               <input
                 type="password"
                 id="password"
@@ -116,10 +115,7 @@ function Login() {
           </div>
           
           <div className="form-footer">
-            <div className="remember-me">
-              <input type="checkbox" id="remember" />
-              <label htmlFor="remember">Remember me</label>
-            </div>
+            
             <Link to="/forgot-password" className="forgot-password">Forgot password?</Link>
           </div>
           

@@ -226,16 +226,12 @@ function ProductCard({ product, onAddToCart }) {
                 <div className="pc-category">
                   {product.category && (
                     Array.isArray(product.category)
-                      ? product.category.map((cat, index) => (
-                          <React.Fragment key={cat}>
-                            {cat}
-                            {index < product.category.length - 2
-                              ? ', '
-                              : index === product.category.length - 2
-                                ? ' & '
-                                : ''}
-                          </React.Fragment>
-                        ))
+                      ? (
+                          <>
+                            {product.category[0]}
+                            {product.category.length > 1 && ' ...'}
+                          </>
+                        )
                       : product.category
                   )}
                 </div>

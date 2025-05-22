@@ -263,12 +263,13 @@ function BookingsList() {
                 )}
                 
                 <div className="booking-actions">
+                <Link to={`/booking/${booking._id}`} className="view-product-btn viewbtbk">
+                    View Details
+                  </Link>
                   <Link to={`/product/${booking.product?._id || ''}`} className="view-product-btn">
                     View Product
                   </Link>
-                  <Link to={`/booking/${booking._id}`} className="view-details-btn">
-                    View Details
-                  </Link>
+                  
                 </div>
               </div>
             </div>

@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const Notification = require('../models/Notification');
-const User = require('../models/User').default;
+const User = require('../models/User')
 
 // Get all bookings for a user
 router.get('/user', auth, async (req, res) => {
@@ -80,6 +80,7 @@ router.post('/create', auth, async (req, res) => {
     }
     
     // Check if product exists and is available
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });

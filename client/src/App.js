@@ -28,6 +28,10 @@ import VerificationProcessing from './pages/verification/VerificationProcessing'
 import VerificationConfirmation from './pages/verification/VerificationConfirmation';
 import EditListing from './components/EditListing';
 import { BrowserRouter } from 'react-router-dom';
+import Messages from './pages/Messages';
+import { initializeSocket, closeSocket } from './services/socket';
+import MessageDetail from './pages/MessageDetail';
+
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -74,6 +78,37 @@ function App() {
   const [filterRadius, setFilterRadius] = useState(10);
   // Add state for maximum product price
   const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
+
+// Initialize socket if user is logged in
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user && user._id) {
+        initializeSocket(user._id);
+      }
+    } catch (error) {
+      console.error('Error initializing socket:', error);
+    }
+  }
+  
+  // Clean up socket on unmount
+  return () => {
+    closeSocket();
+  };
+}, []);
+
+// In your login handler function, add:
+
+
+// In your logout handler function, add:
+const handleLogout = () => {
+  // Close socket connection
+  closeSocket();
+};
 
   // Define authoritative list of available categories
   const availableCategories = [
@@ -309,77 +344,93 @@ function App() {
   
   // Use useCallback to memoize the applyFilters function
   const applyFilters = React.useCallback(() => {
-    console.log('Applying filters with state:', filters); // Log when applyFilters runs and current filters
-    // Start with all products, either initial fetch or nearby products
-    let filtered = nearbyProducts.length > 0 ? nearbyProducts : products; // Start filtering from the appropriate product list
-    
-    console.log(`Products before filtering: ${filtered.length}`); // Log count before filtering
-    
-    // Apply category filter
-    // Updated logic for multiple category selection
-    if (Array.isArray(filters.category) && filters.category.length > 0) {
-      filtered = filtered.filter(product =>
-        Array.isArray(product.category) 
-          ? product.category.some(cat => filters.category.includes(cat)) // Check if product has at least one of the selected categories
-          : filters.category.includes(product.category) // Fallback for single string product category
-      );
-    } else if (typeof filters.category === 'string' && filters.category) { // Keep fallback for old single string filter
-       filtered = filtered.filter(product =>
-         Array.isArray(product.category)
-           ? product.category.includes(filters.category)
-           : product.category === filters.category
-       );
+    console.log('Applying filters:', filters); // Log the filters being applied
+    console.log('Products state before filtering:', products.length, products); // Log products state
+    console.log('NearbyProducts state before filtering:', nearbyProducts.length, nearbyProducts); // Log nearbyProducts state
+    // Start with the appropriate base list: nearbyProducts if location filter is active, otherwise the full products list
+    let baseProducts = products;
+    console.log('Base products before location check (' + baseProducts.length + '):', baseProducts); // Log base products before location check
+    if (filterLocation && filterLocation.latitude !== undefined && filterLocation.longitude !== undefined && filterRadius > 0) {
+         // If a location filter is active, start filtering from the nearbyProducts list
+         // This assumes fetchNearbyProducts has already populated nearbyProducts based on filterLocation and filterRadius
+         baseProducts = nearbyProducts;
+         console.log('Using nearbyProducts as base (' + baseProducts.length + '):', baseProducts); // Log when nearbyProducts is used
     }
-    
-    // Apply price range filter
+
+    let updatedFilteredProducts = [...baseProducts]; // Start with the determined base list
+
+    console.log('Products after base selection (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after selecting base
+
+    // Category Filter
+    console.log('Category filter state:', filters.category); // Add this log
+    // Check if category filter is active and not 'All' (represented by empty array)
+    if (Array.isArray(filters.category) && filters.category.length > 0 && !filters.category.includes('All')) {
+      console.log('Applying category filter:', filters.category); // Log category filter
+      // Ensure filters.category is an array for includes check
+      const categoriesToFilter = Array.isArray(filters.category) ? filters.category : [filters.category];
+      updatedFilteredProducts = updatedFilteredProducts.filter(product =>
+        categoriesToFilter.includes(product.category) || (Array.isArray(product.category) && product.category.some(cat => categoriesToFilter.includes(cat)))
+      );
+       console.log('Products after category filter (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after category filter
+    }
+
+    // Price Range Filter
     if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
-      const [minPrice, maxPrice] = filters.priceRange;
-      console.log(`Applying price filter: ${minPrice} to ${maxPrice}`); // Log price filter range
-      filtered = filtered.filter(product => product.price >= minPrice && product.price <= maxPrice);
-    } else if (typeof filters.priceRange === 'number') { // Keep fallback for old single number filter if necessary
-       console.log(`Applying price filter (single value): <= ${filters.priceRange}`); // Log single value price filter
-       filtered = filtered.filter(product => product.price <= filters.priceRange);
-    }
-    
-    // Apply location filter
-    // Note: This currently filters by text. Geospatial filtering would be more advanced.
-    if (filters.location) {
-      filtered = filtered.filter(product => 
-        product.location.toLowerCase().includes(filters.location.toLowerCase())
+      console.log('Applying price range filter:', filters.priceRange); // Log price range filter
+      updatedFilteredProducts = updatedFilteredProducts.filter(product =>
+        product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
       );
+       console.log('Products after price range filter (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after price filter
     }
-    
-    // Apply availability filter
-    if (filters.availability) {
-      filtered = filtered.filter(product => product.availability === filters.availability);
+
+    // Availability Filter
+    if (filters.availability && filters.availability !== '') {
+      console.log('Applying availability filter:', filters.availability); // Log availability filter
+      updatedFilteredProducts = updatedFilteredProducts.filter(product =>
+        product.availability === filters.availability
+      );
+       console.log('Products after availability filter (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after availability filter
     }
-    
-    // Apply rating filter
-    if (filters.rating) {
-      filtered = filtered.filter(product => product.rating >= parseInt(filters.rating));
+
+    // Rating Filter
+    if (filters.rating && filters.rating !== '') {
+      console.log('Applying rating filter:', filters.rating); // Log rating filter
+      updatedFilteredProducts = updatedFilteredProducts.filter(product =>
+        product.rating >= parseInt(filters.rating) || (product.rating === null && parseInt(filters.rating) === 0) // Handle products with no rating if filtering by 0 or more stars
+      );
+       console.log('Products after rating filter (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after rating filter
     }
     
     // Apply search query - Note: This should ideally be done on the backend for large datasets
     if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        // Check if any category in the array includes the search query
-        (Array.isArray(product.category) && product.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))) ||
-        (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase())) // Fallback for single string category
-      );
+        console.log('Applying search query:', searchQuery); // Log search query
+        updatedFilteredProducts = updatedFilteredProducts.filter(product =>
+          product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          // Check if any category in the array includes the search query
+          (Array.isArray(product.category) && product.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+          (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase())) // Fallback for single string category
+        );
+        console.log('Products after search query filter (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log after search filter
     }
-    
-    setFilteredProducts(filtered);
-    console.log(`Products after filtering: ${filtered.length}`); // Log count after filtering
-  }, [filters, products, searchQuery, nearbyProducts]); // Dependencies for useCallback
-  
 
+    console.log('Final filtered products (' + updatedFilteredProducts.length + '):', updatedFilteredProducts); // Log the final filtered list and count
+    setFilteredProducts(updatedFilteredProducts);
+  }, [filters, products, nearbyProducts, filterLocation, filterRadius, searchQuery]); // Dependencies for useCallback
+
+  // Apply filters whenever filters state or relevant data changes, except for the initial render
+  const initialRender = useRef(true);
   useEffect(() => {
-    // Apply filters when filter state or search query changes
-    applyFilters();
-  }, [filters, products, searchQuery, nearbyProducts, applyFilters]); // Added dependencies
-  
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    // Only apply filters if not currently loading nearby products (which sets filteredProducts directly)
+    // and if the filters or relevant data have actually changed.
+     applyFilters();
+
+  }, [filters, products, isLoading, filterLocation, filterRadius, nearbyProducts, applyFilters, searchQuery]); // Depend on filters, products, nearbyProducts, isLoading, filterLocation, filterRadius, applyFilters, and searchQuery
+
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
@@ -410,7 +461,7 @@ function App() {
   const handleFilterChange = (filterName, value) => {
     console.log(`Filter changed: ${filterName}`, value); // Log filter changes
     if (filterName === 'radius') {
-      setFilterRadius(value);
+      setFilterRadius(value); // Keep separate state for radius if ProductList needs it for map circle
     }
     setFilters(prevFilters => {
       const newFilters = {
@@ -493,26 +544,24 @@ function App() {
     }
   }, [products]);
 
-  // Apply filters whenever filters state changes, except for the initial render
-  const initialRender = useRef(true);
-  useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
+  // Handler for applying filters from the modal
+  const applyModalFilters = (newFilters) => {
+    console.log('Applying modal filters:', newFilters); // Log the filters from modal
+    setFilters(newFilters);
+    // We might also need to update filterLocation and filterRadius here
+    if (newFilters.location) {
+      // Assuming there's a function to geocode location and update filterLocation
+      // This part might need adjustment based on existing geocoding logic
+       handleLocationSelect(newFilters.location); // Use the existing handler if it geocodes
     }
-    // Only apply filters if not currently loading nearby products (which sets filteredProducts directly)
-    if (!isLoading) {
-       applyFilters();
+    if (newFilters.radius !== undefined) {
+       setFilterRadius(newFilters.radius); // Update the radius state in App.js
+       // Trigger fetchNearbyProducts if location is set
+       if(filterLocation && filterLocation.latitude !== undefined && filterLocation.longitude !== undefined) {
+          fetchNearbyProducts(filterLocation.latitude, filterLocation.longitude, newFilters.radius);
+       }
     }
-
-  }, [filters, products, isLoading, filterLocation, filterRadius]); // Depend on filters, products, and isLoading
-
-  // Effect to re-apply filters when nearbyProducts are fetched and isLoading becomes false
-  useEffect(() => {
-    if (!isLoading && nearbyProducts.length > 0) {
-       applyFilters();
-    }
-  }, [isLoading, nearbyProducts]); // Depend on isLoading and nearbyProducts
+  };
 
   return (
     <BrowserRouter>
@@ -536,12 +585,22 @@ function App() {
                 <Footer />
               </>
             }
+            
             />
+          
             {/* Product Detail Page */}
             <Route path="/product/:id" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <ProductDetail onAddToCart={addToCart} />
+                <Footer />
+              </>
+            } />
+
+<Route path="/messages/:id/:rec" element={
+              <>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <MessageDetail />
                 <Footer />
               </>
             } />
@@ -559,7 +618,13 @@ function App() {
                 <Footer />
               </>
             } />
-            
+              <Route path="/messages" element={
+              <>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <Messages />
+                <Footer />
+              </>
+            } />
             {/* Protected Routes */}
             <Route path="/profile" element={
               <ProtectedRoute>
@@ -643,16 +708,33 @@ function App() {
       </div>
       <div className="container">
         <div className="main-content">
-        <Filters 
-  filters={filters}
-  onFilterChange={handleFilterChange}
-  onResetFilters={resetFilters}
-  userLocation={userLocation}
-  onLocationSelect={handleLocationSelect}
-  maxPrice={maxPrice}
-  categories={availableCategories}
-/>
-          {isLoading ? (
+        {/* Removed Filter button for modal - now in ProductList */}
+        {/* <button className="show-filters-btn" onClick={() => setShowFilterModal(true)}>
+          <i className="fas fa-filter"></i> Show Filters
+        </button> */}
+        
+        {/* Removed Filters Modal structure - now in ProductList */}
+        {/* {showFilterModal && (
+          <div className="filter-modal-overlay">
+            <div className="filter-modal-content">
+              <Filters 
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onResetFilters={resetFilters}
+                userLocation={userLocation}
+                onLocationSelect={handleLocationSelect}
+                maxPrice={maxPrice}
+                categories={availableCategories}
+                isVisible={showFilterModal}
+                onClose={() => setShowFilterModal(false)}
+                onApplyFilters={applyModalFilters}
+              />
+            </div>
+          </div>
+        )} */}
+        
+        {/* Product List */}
+        {isLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
               <p>Loading products...</p>
@@ -671,8 +753,16 @@ function App() {
               <ProductList 
                 products={filteredProducts}
                 onAddToCart={addToCart}
-                filterLocation={filterLocation}
-                filterRadius={filterRadius}
+                // Pass down filter related props
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onResetFilters={resetFilters}
+                userLocation={userLocation}
+                onLocationSelect={handleLocationSelect}
+                maxPrice={maxPrice}
+                categories={availableCategories}
+                isLoading={isLoading} // Pass isLoading prop
+                onApplyFilters={applyModalFilters} // Pass the new handler for modal apply
               />
               
               <div className="payment-notice">
@@ -701,3 +791,4 @@ function App() {
 }
 
 export default App;
+
