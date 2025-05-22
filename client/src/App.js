@@ -27,7 +27,7 @@ import SelfieCapture from './pages/verification/SelfieCapture';
 import VerificationProcessing from './pages/verification/VerificationProcessing';
 import VerificationConfirmation from './pages/verification/VerificationConfirmation';
 import EditListing from './components/EditListing';
-
+import { BrowserRouter } from 'react-router-dom';
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem('token');
@@ -515,9 +515,9 @@ function App() {
   }, [isLoading, nearbyProducts]); // Depend on isLoading and nearbyProducts
 
   return (
-    <Router>
+    <BrowserRouter>
       <NotificationProvider>
-        <div className="App">
+        <div>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -611,6 +611,20 @@ function App() {
               </RenterRoute>
             } />
             
+            {/* Add this new route for OAuth success */}
+            <Route 
+              path="/auth/success" 
+              element={
+                <Navigate 
+                  to="/" 
+                  replace 
+                  state={{ 
+                    token: new URLSearchParams(window.location.search).get('token') 
+                  }} 
+                />
+              } 
+            />
+            
             {/* Admin Routes */}
             <Route path="/admin/*" element={
               <AdminRoute>
@@ -678,10 +692,11 @@ function App() {
             <Route path="/verify/selfie" element={<SelfieCapture />} />
             <Route path="/verify/processing" element={<VerificationProcessing />} />
             <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
+            <Route path="/auth/google" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </NotificationProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 

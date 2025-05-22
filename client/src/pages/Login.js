@@ -137,7 +137,10 @@ function Login() {
         </div>
         
         <div className="social-login">
-          <button className="social-button google">
+          <button 
+            className="social-button google"
+            onClick={() => window.location.href = `${'http://localhost:4000'}/auth/google`}
+          >
             <i className="fab fa-google"></i>
             <span>Login with Google</span>
           </button>
