@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Assuming backend mounts userRoutes under /api/users
-const API_URL = process.env.REACT_APP_API_URL || "http://back:4000/api";
+const API_URL = process.env.REACT_APP_API_URL || "http://server:4000/api";
 
 // Helper function to get auth header
 const getAuthHeader = () => {

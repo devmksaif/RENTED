@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const API_URL =  "http://back:4000";
+const API_URL =  "http://server:4000";
 
 let socket;
 let messageListeners = [];
