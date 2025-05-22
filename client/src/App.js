@@ -783,13 +783,10 @@ const handleLogout = () => {
             <Route path="/verify/selfie" element={<SelfieCapture />} />
             <Route path="/verify/processing" element={<VerificationProcessing />} />
             <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
-<<<<<<< HEAD
 
             {/* New Route for Completing Google Registration */}
             <Route path="/complete-registration" element={<CompleteRegistration />} />
-=======
             <Route path="/auth/google" element={<Navigate to="/" />} />
->>>>>>> 29b52989be0daf9b72481eb74d1b5ab422a1c82a
           </Routes>
         </div>
       </NotificationProvider>

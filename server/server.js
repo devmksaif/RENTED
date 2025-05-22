@@ -76,7 +76,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
 // Add auth routes
 app.use('/auth', authRoutes);
-=======
+ 
 app.use('/api/messages', messageRoutes);
 
 // Default route
