@@ -1,8 +1,41 @@
 #!/bin/bash
 
-API_URL="http://localhost:4000/api/products/"
-OWNER_ID="681c6445005de231e3092a97" # Change to a valid user ID
+# API URLs
+USER_API_URL="http://localhost:4000/api/users"
+PRODUCT_API_URL="http://localhost:4000/api/products/"
 
+# Create admin user first
+echo "Creating admin user..."
+admin_response=$(curl -X POST "$USER_API_URL/create-admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@rented.com",
+    "password": "admin123",
+    "adminKey": "RENTED_ADMIN_KEY"
+  }')
+
+ADMIN_ID=$(echo $admin_response | jq -r '._id')
+echo "Admin user created with ID: $ADMIN_ID"
+
+# Create regular user
+echo "Creating regular user..."
+user_response=$(curl -X POST "$USER_API_URL/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "user@rented.com",
+    "password": "user123",
+    "phone": "+1234567890",
+    "address": "123 Test St",
+    "accountType": "both",
+    "verificationStatus": "verified"
+  }')
+
+USER_ID=$(echo $user_response | jq -r '._id')
+echo "Regular user created with ID: $USER_ID"
+
+# Products data
 products='[
   {
     "title": "Road Bicycle",
@@ -12,7 +45,7 @@ products='[
     "location": "Tunis",
     "geoLocation": { "type": "Point", "coordinates": [10.1658, 36.8065] },
     "image": "https://source.unsplash.com/300x200/?bike",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Canon EOS R Camera",
@@ -22,7 +55,7 @@ products='[
     "location": "Sfax",
     "geoLocation": { "type": "Point", "coordinates": [10.7603, 34.7406] },
     "image": "https://source.unsplash.com/300x200/?camera",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Camping Tent 4P",
@@ -32,7 +65,7 @@ products='[
     "location": "Bizerte",
     "geoLocation": { "type": "Point", "coordinates": [9.8739, 37.2744] },
     "image": "https://source.unsplash.com/300x200/?tent",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "DJI Mini Drone",
@@ -42,7 +75,7 @@ products='[
     "location": "Sousse",
     "geoLocation": { "type": "Point", "coordinates": [10.6406, 35.8256] },
     "image": "https://source.unsplash.com/300x200/?drone",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Electric Guitar",
@@ -52,7 +85,7 @@ products='[
     "location": "Gabes",
     "geoLocation": { "type": "Point", "coordinates": [10.1010, 33.8815] },
     "image": "https://source.unsplash.com/300x200/?guitar",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "MacBook Pro 2020",
@@ -62,7 +95,7 @@ products='[
     "location": "Nabeul",
     "geoLocation": { "type": "Point", "coordinates": [10.7357, 36.4514] },
     "image": "https://source.unsplash.com/300x200/?macbook",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "GoPro Hero 10",
@@ -72,7 +105,7 @@ products='[
     "location": "Mahdia",
     "geoLocation": { "type": "Point", "coordinates": [11.0409, 35.5047] },
     "image": "https://source.unsplash.com/300x200/?gopro",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Xbox Series S",
@@ -82,7 +115,7 @@ products='[
     "location": "Kairouan",
     "geoLocation": { "type": "Point", "coordinates": [10.1000, 35.6781] },
     "image": "https://source.unsplash.com/300x200/?xbox",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Portable Projector",
@@ -92,7 +125,7 @@ products='[
     "location": "Zarzis",
     "geoLocation": { "type": "Point", "coordinates": [11.1122, 33.5038] },
     "image": "https://source.unsplash.com/300x200/?projector",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   },
   {
     "title": "Yoga Mat",
@@ -102,15 +135,18 @@ products='[
     "location": "Manouba",
     "geoLocation": { "type": "Point", "coordinates": [10.0972, 36.8104] },
     "image": "https://source.unsplash.com/300x200/?yoga",
-    "owner": "'$OWNER_ID'"
+    "owner": "'$USER_ID'"
   }
 ]'
 
 # Inject each product using curl
+echo "Injecting products..."
 echo "$products" | jq -c '.[]' | while read -r product; do
-  curl -X POST "$API_URL" \
+  curl -X POST "$PRODUCT_API_URL" \
     -H "Content-Type: application/json" \
     -d "$product"
   echo -e "\nInjected: $(echo "$product" | jq -r .title)"
 done
+
+echo "Data injection completed!"
 
