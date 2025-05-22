@@ -13,15 +13,28 @@
 
 .search-container {
   position: relative;
-  width: 300px;
+  width: 100%;
+  max-width: 250px;
 }
 
 .search-input {
-  width: 100%;
-  padding: 10px 35px 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  width: 80%;
+  padding: 10px 40px 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
   font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.search-input::placeholder {
+  color: #9e9e9e;
+}
+
+.search-input:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 1px 6px rgba(76, 175, 80, 0.3);
 }
 
 .clear-search {
