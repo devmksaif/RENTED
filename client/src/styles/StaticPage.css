@@ -1,0 +1,101 @@
+.static-page-container {
+  max-width: 800px; /* Limit content width */
+  margin: 20px auto; /* Center the container and add vertical margin */
+  padding: 20px; /* Add padding inside the container */
+  background-color: #fff; /* White background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  line-height: 1.6; /* Improve readability */
+}
+
+.static-page-container h1,
+.static-page-container h2,
+.static-page-container h3 {
+  color: #333; /* Darker heading color */
+  margin-top: 20px; /* Space above headings */
+  margin-bottom: 10px; /* Space below headings */
+}
+
+.static-page-container h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #eee; /* Underline for main heading */
+  padding-bottom: 10px;
+}
+
+.static-page-container h2 {
+  font-size: 1.5em;
+}
+
+.static-page-container h3 {
+  font-size: 1.2em;
+}
+
+.static-page-container p {
+  margin-bottom: 15px; /* Space below paragraphs */
+  color: #555; /* Slightly lighter paragraph color */
+}
+
+.static-page-container ul {
+  margin-bottom: 15px;
+  padding-left: 20px; /* Indent list items */
+}
+
+.static-page-container li {
+  margin-bottom: 5px;
+}
+
+.static-page-container a {
+  color: #007bff; /* Link color */
+  text-decoration: none; /* Remove underline */
+}
+
+.static-page-container a:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+.contact-form .form-group {
+  margin-bottom: 15px;
+}
+
+.contact-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.contact-form button {
+  background-color: #4CAF50; /* Green button */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.contact-form button:hover {
+  background-color: #45a049;
+}
+
+/* Style for FAQ items if needed */
+.faq-item {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #eee;
+}
+
+.faq-item h3 {
+  margin-top: 0;
+  margin-bottom: 5px;
+} 

@@ -32,6 +32,19 @@ import Messages from './pages/Messages';
 import { initializeSocket, closeSocket } from './services/socket';
 import MessageDetail from './pages/MessageDetail';
 import CompleteRegistration from './pages/CompleteRegistration';
+// Import newly created static pages
+import AboutUs from './pages/AboutUs';
+import Careers from './pages/Careers';
+import BlogPage from './pages/BlogPage';
+import Press from './pages/Press';
+import HelpCenter from './pages/HelpCenter';
+import FAQ from './pages/FAQ';
+import ContactUs from './pages/ContactUs';
+import SafetyCenter from './pages/SafetyCenter';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
+import CommunityGuidelines from './pages/CommunityGuidelines';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -576,14 +589,12 @@ const handleLogout = () => {
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <Checkout cartItems={cartItems} />
-                <Footer />
               </>
             } />
             <Route path="/checkout-success" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <CheckoutSuccess />
-                <Footer />
               </>
             }
             
@@ -594,7 +605,6 @@ const handleLogout = () => {
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <ProductDetail onAddToCart={addToCart} />
-                <Footer />
               </>
             } />
 
@@ -602,7 +612,6 @@ const handleLogout = () => {
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <MessageDetail />
-                <Footer />
               </>
             } />
             
@@ -616,14 +625,12 @@ const handleLogout = () => {
                   updateQuantity={updateQuantity} 
                   clearCart={clearCart}
                 />
-                <Footer />
               </>
             } />
               <Route path="/messages" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <Messages />
-                <Footer />
               </>
             } />
             {/* Protected Routes */}
@@ -631,7 +638,6 @@ const handleLogout = () => {
               <ProtectedRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <UserProfile />
-                <Footer />
               </ProtectedRoute>
             } />
             
@@ -639,7 +645,6 @@ const handleLogout = () => {
               <ProtectedRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <BookingsList />
-                <Footer />
               </ProtectedRoute>
             } />
             
@@ -647,7 +652,6 @@ const handleLogout = () => {
               <ProtectedRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <BookingDetail />
-                <Footer />
               </ProtectedRoute>
             } />
             
@@ -655,7 +659,6 @@ const handleLogout = () => {
               <ProtectedRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <ListingsList />
-                <Footer />
               </ProtectedRoute>
             } />
             
@@ -664,7 +667,6 @@ const handleLogout = () => {
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <CreateListing availableCategories={availableCategories} />
-                <Footer />
               </RenterRoute>
             } />
             
@@ -673,7 +675,6 @@ const handleLogout = () => {
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <EditListing availableCategories={availableCategories} />
-                <Footer />
               </RenterRoute>
             } />
             
@@ -698,6 +699,20 @@ const handleLogout = () => {
               </AdminRoute>
             } />
             
+            {/* New Static Pages Routes */}
+            <Route path="/about" element={<><Header cartItemCount={cartLength} /><AboutUs /><Footer /></>} />
+            <Route path="/careers" element={<><Header cartItemCount={cartLength} /><Careers /><Footer /></>} />
+            <Route path="/blog" element={<><Header cartItemCount={cartLength} /><BlogPage /><Footer /></>} />
+            <Route path="/press" element={<><Header cartItemCount={cartLength} /><Press /><Footer /></>} />
+            <Route path="/help" element={<><Header cartItemCount={cartLength} /><HelpCenter /><Footer /></>} />
+            <Route path="/faq" element={<><Header cartItemCount={cartLength} /><FAQ /><Footer /></>} />
+            <Route path="/contact" element={<><Header cartItemCount={cartLength} /><ContactUs /><Footer /></>} />
+            <Route path="/safety" element={<><Header cartItemCount={cartLength} /><SafetyCenter /><Footer /></>} />
+            <Route path="/terms" element={<><Header cartItemCount={cartLength} /><TermsOfService /><Footer /></>} />
+            <Route path="/privacy" element={<><Header cartItemCount={cartLength} /><PrivacyPolicy /><Footer /></>} />
+            <Route path="/cookies" element={<><Header cartItemCount={cartLength} /><CookiePolicy /><Footer /></>} />
+            <Route path="/guidelines" element={<><Header cartItemCount={cartLength} /><CommunityGuidelines /><Footer /></>} />
+
             {/* Home Page */}
             <Route path="/" element={
               <>
