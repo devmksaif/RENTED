@@ -33,15 +33,9 @@ user_response=$(curl -X POST "$USER_API_URL/register" \
   }')
 
 # Login to get the token
-echo "Logging in to get auth token..."
-login_response=$(curl -X POST "$USER_API_URL/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@rented.com",
-    "password": "user123"
-  }')
+ 
 
-TOKEN=$(echo $login_response | jq -r '.token')
+TOKEN=$(echo $user_response | jq -r '.token')
 USER_ID=$(echo $login_response | jq -r '.user._id')
 
 if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
