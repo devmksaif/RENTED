@@ -27,6 +27,7 @@ import SelfieCapture from './pages/verification/SelfieCapture';
 import VerificationProcessing from './pages/verification/VerificationProcessing';
 import VerificationConfirmation from './pages/verification/VerificationConfirmation';
 import EditListing from './components/EditListing';
+import { BrowserRouter } from 'react-router-dom';
 import Messages from './pages/Messages';
 import { initializeSocket, closeSocket } from './services/socket';
 import MessageDetail from './pages/MessageDetail';
@@ -80,19 +81,26 @@ function App() {
   const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
 
 // Initialize socket if user is logged in
-const token = localStorage.getItem('token');
-const userId = localStorage.getItem('userId');
-
 useEffect(() => {
-  if (token && userId) {
-    initializeSocket(userId);
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user && user._id) {
+        initializeSocket(user._id);
+      }
+    } catch (error) {
+      console.error('Error initializing socket:', error);
+    }
   }
   
   // Clean up socket on unmount
   return () => {
     closeSocket();
   };
-},[])
+}, []);
 
 // In your login handler function, add:
 
@@ -557,9 +565,9 @@ const handleLogout = () => {
   };
 
   return (
-    <Router>
+    <BrowserRouter>
       <NotificationProvider>
-        <div className="App">
+        <div>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -590,7 +598,7 @@ const handleLogout = () => {
               </>
             } />
 
-<Route path="/send/:id" element={
+<Route path="/messages/:id/:rec" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <MessageDetail />
@@ -668,6 +676,20 @@ const handleLogout = () => {
                 <Footer />
               </RenterRoute>
             } />
+            
+            {/* Add this new route for OAuth success */}
+            <Route 
+              path="/auth/success" 
+              element={
+                <Navigate 
+                  to="/" 
+                  replace 
+                  state={{ 
+                    token: new URLSearchParams(window.location.search).get('token') 
+                  }} 
+                />
+              } 
+            />
             
             {/* Admin Routes */}
             <Route path="/admin/*" element={
@@ -761,13 +783,17 @@ const handleLogout = () => {
             <Route path="/verify/selfie" element={<SelfieCapture />} />
             <Route path="/verify/processing" element={<VerificationProcessing />} />
             <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
+<<<<<<< HEAD
 
             {/* New Route for Completing Google Registration */}
             <Route path="/complete-registration" element={<CompleteRegistration />} />
+=======
+            <Route path="/auth/google" element={<Navigate to="/" />} />
+>>>>>>> 29b52989be0daf9b72481eb74d1b5ab422a1c82a
           </Routes>
         </div>
       </NotificationProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 

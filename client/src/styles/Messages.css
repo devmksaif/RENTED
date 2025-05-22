@@ -11,11 +11,6 @@
   margin-bottom: 20px;
 }
 
-.messages-header h1 {
-  font-size: 28px;
-  color: #333;
-}
-
 .search-container {
   position: relative;
   width: 300px;
@@ -23,36 +18,21 @@
 
 .search-input {
   width: 100%;
-  padding: 10px 15px 10px 40px;
+  padding: 10px 35px 10px 15px;
   border: 1px solid #ddd;
-  border-radius: 30px;
+  border-radius: 8px;
   font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-  outline: none;
-}
-
-.search-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
 }
 
 .clear-search {
   position: absolute;
-  right: 15px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #999;
   cursor: pointer;
+  color: #666;
 }
 
 .conversations-list {
@@ -61,44 +41,47 @@
   gap: 10px;
 }
 
-.conversation-item {
+.conversation-card {
   display: flex;
+  align-items: center;
   padding: 15px;
-  border-radius: 10px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
+  transition: transform 0.2s;
 }
 
-.conversation-item:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+.conversation-card:hover {
   transform: translateY(-2px);
 }
 
-.conversation-item.unread {
-  background-color: #f0f7f0;
-  border-left: 3px solid #4caf50;
-}
-
-.conversation-avatar {
+.user-avatar {
+  position: relative;
   width: 50px;
   height: 50px;
+  background: #f0f0f0;
   border-radius: 50%;
-  background-color: #4caf50;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
   margin-right: 15px;
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: #4CAF50;
+  border-radius: 50%;
+  border: 2px solid white;
 }
 
 .conversation-content {
   flex: 1;
-  min-width: 0;
 }
 
 .conversation-header {
@@ -108,115 +91,37 @@
   margin-bottom: 5px;
 }
 
-.conversation-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: #333;
-}
-
-.conversation-time {
-  font-size: 12px;
-  color: #888;
-}
-
-.conversation-preview {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.conversation-last-message {
-  margin: 0;
-  font-size: 14px;
+.last-message {
   color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80%;
+  font-size: 14px;
+  margin: 0;
 }
 
 .unread-badge {
-  background-color: #4caf50;
+  background: #4CAF50;
   color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: bold;
 }
 
 .no-conversations {
   text-align: center;
-  padding: 40px 0;
+  padding: 40px;
 }
 
-.no-conversations-icon {
+.no-conversations i {
   font-size: 48px;
-  color: #ddd;
-  margin-bottom: 15px;
+  color: #ccc;
+  margin-bottom: 20px;
 }
 
-.no-conversations h3 {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.no-conversations p {
-  color: #666;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.messages-loading,
-.messages-error {
-  text-align: center;
-  padding: 40px 0;
-}
-
-.loading-spinner {
+.browse-button {
   display: inline-block;
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(76, 175, 80, 0.2);
-  border-radius: 50%;
-  border-top-color: #4caf50;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 15px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.messages-error {
-  color: #e53935;
-}
-
-@media (max-width: 768px) {
-  .messages-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  
-  .search-container {
-    width: 100%;
-  }
-  
-  .conversation-item {
-    padding: 12px;
-  }
-  
-  .conversation-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-  }
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-top: 20px;
 }

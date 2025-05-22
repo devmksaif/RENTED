@@ -1036,6 +1036,7 @@ export const reverseGeocode = async (latitude, longitude) => {
   }
 };
 
+
 // Messaging APIs
 export const getConversations = async () => {
   try {
@@ -1065,7 +1066,11 @@ export const sendMessage = async (recipientId, content, productId = null) => {
   try {
     const response = await axios.post(
       `${API_URL}/messages/send`,
-      { recipientId, content, productId },
+      {
+        recipientId,
+        content,
+        productId
+      },
       {
         headers: getAuthHeader(),
       }
@@ -1100,7 +1105,7 @@ export const markConversationAsRead = async (conversationId) => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error marking conversation as read:', error);
+    console.error("Error marking conversation as read:", error);
     throw error;
   }
 };

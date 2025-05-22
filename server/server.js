@@ -1,7 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const session = require('express-session');
+const passport = require('./auth/config');
+const authRoutes = require('./auth/routes');
 const http = require('http');
 const socketIo = require('socket.io');
 const productRoutes = require('./routes/productRoutes');
@@ -40,11 +44,21 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Add logging middleware to see incoming request paths
-app.use((req, res, next) => {
-  console.log(`Incoming Request: ${req.method} ${req.originalUrl} (Path: ${req.path})`);
-  next();
-});
+
+// Add session middleware before your routes
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/rented')
@@ -60,6 +74,9 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
+// Add auth routes
+app.use('/auth', authRoutes);
+=======
 app.use('/api/messages', messageRoutes);
 
 // Default route
@@ -94,6 +111,7 @@ io.on('connection', (socket) => {
       // Emit to recipient if they're online
       const recipientSocketId = connectedUsers.get(recipientId);
       if (recipientSocketId) {
+        // Fix: Change io.br to io.to
         io.to(recipientSocketId).emit('new_message', {
           sender: socket.userId,
           content,

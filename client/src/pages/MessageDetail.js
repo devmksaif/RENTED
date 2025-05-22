@@ -1,127 +1,80 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getMessages, sendMessage, markConversationAsRead } from '../services/api';
-import { getSocket, sendMessage as socketSendMessage, sendTypingIndicator } from '../services/socket';
 import '../styles/MessageDetail.css';
+import { initializeSocket, getSocket, sendMessage as sm } from '../services/socket';
 
 function MessageDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id, rec } = useParams();
+  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState(null);
-  const [conversation, setConversation] = useState(null);
-  const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
-  const messageListRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-
+  
   useEffect(() => {
-    fetchMessages();
-    
-    // Mark conversation as read when component mounts
-    if (id) {
-      markConversationAsRead(id).catch(err => 
-        console.error('Error marking conversation as read:', err)
-      );
+    try {
+      // Parse user object properly
+      const user = JSON.parse(localStorage.getItem("user") || '{}');
+      fetchMessages();
+      
+      // Initialize socket with user ID
+      if (user && user.id) {
+        console.log(user)
+        const socketInstance = initializeSocket(user.id);
+        
+        // Set up listener for new messages
+        if (socketInstance) {
+          socketInstance.on('new_message', (data) => {
+            if (data.conversationId === id) {
+              // Add the new message to the messages array
+              setMessages(prev => [...prev, {
+                _id: Date.now(), // Temporary ID
+                content: data.content,
+                sender: data.sender,
+                isCurrentUser: false,
+                createdAt: data.createdAt || new Date(),
+                isRead: false
+              }]);
+              
+              // Mark conversation as read
+              markConversationAsRead(id);
+              
+              // Scroll to bottom
+              scrollToBottom();
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up socket:', error);
     }
     
-    // Set up socket listeners
-    const socket = getSocket();
-    if (socket) {
-      // Listen for new messages
-      socket.on('new_message', handleNewMessage);
-      
-      // Listen for typing indicators
-      socket.on('typing', handleTypingIndicator);
-      
-      // Listen for user status changes
-      socket.on('user_status', handleUserStatusChange);
-    }
-    
+    // Clean up socket listeners on unmount
     return () => {
-      // Clean up socket listeners
+      const socket = getSocket();
       if (socket) {
-        socket.off('new_message', handleNewMessage);
-        socket.off('typing', handleTypingIndicator);
-        socket.off('user_status', handleUserStatusChange);
+        socket.off('new_message');
       }
     };
-  }, [id]);
-
-  useEffect(() => {
-    // Scroll to bottom when messages change
-    scrollToBottom();
-  }, [messages, isTyping]);
+  }, [id, rec]);
+ 
 
   const fetchMessages = async () => {
-    if (!id) return;
-    
     try {
       setIsLoading(true);
       const data = await getMessages(id);
-      setMessages(data.messages);
       setConversation(data.conversation);
-      setError(null);
+      setMessages(data.messages);
+      await markConversationAsRead(id);
+      scrollToBottom();
     } catch (error) {
       console.error('Error fetching messages:', error);
       setError('Failed to load messages. Please try again.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleNewMessage = (data) => {
-    // Only process messages for the current conversation
-    if (data.conversationId === id) {
-      // Add the new message to the messages array
-      setMessages(prevMessages => [
-        ...prevMessages,
-        {
-          _id: Date.now().toString(), // Temporary ID until refresh
-          content: data.content,
-          sender: { _id: data.sender },
-          createdAt: data.createdAt,
-          isCurrentUser: false
-        }
-      ]);
-      
-      // Mark the conversation as read
-      markConversationAsRead(id).catch(err => 
-        console.error('Error marking conversation as read:', err)
-      );
-    }
-  };
-
-  const handleTypingIndicator = (data) => {
-    // Only show typing indicator for the current conversation
-    if (data.conversationId === id) {
-      setIsTyping(true);
-      
-      // Clear previous timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      
-      // Hide typing indicator after 3 seconds
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsTyping(false);
-      }, 3000);
-    }
-  };
-
-  const handleUserStatusChange = (data) => {
-    // Update user status if it's the other user in this conversation
-    if (conversation && conversation.otherUser._id === data.userId) {
-      setConversation(prev => ({
-        ...prev,
-        otherUser: {
-          ...prev.otherUser,
-          isOnline: data.status === 'online'
-        }
-      }));
     }
   };
 
@@ -131,28 +84,18 @@ function MessageDetail() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
-    if (!newMessage.trim()) return;
-    
+    if (!newMessage.trim() || isSending) return;
+
     try {
       setIsSending(true);
-      const recipientId = conversation.otherUser._id;
-      const response = await sendMessage(recipientId, newMessage);
+      const response = await sendMessage(rec, newMessage.trim());
       
-      // Also send via socket for real-time delivery
-      socketSendMessage(recipientId, newMessage, id);
+      // Send message through socket
+      sm(rec, newMessage.trim(), id);
       
-      // Add message to UI
-      const tempMessage = {
-        _id: response._id || Date.now().toString(),
-        content: newMessage,
-        sender: { _id: 'currentUser' },
-        createdAt: new Date().toISOString(),
-        isCurrentUser: true
-      };
-      
-      setMessages([...messages, tempMessage]);
+      setMessages(prev => [...prev, response]);
       setNewMessage('');
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
       setError('Failed to send message. Please try again.');
@@ -161,59 +104,11 @@ function MessageDetail() {
     }
   };
 
-  const handleInputChange = (e) => {
-    setNewMessage(e.target.value);
-    
-    // Send typing indicator via socket
-    if (conversation && conversation.otherUser) {
-      sendTypingIndicator(id, conversation.otherUser._id);
-    }
-  };
-
-  const formatMessageDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatMessageDay = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
-    }
-  };
-
-  // Group messages by day
-  const groupMessagesByDay = () => {
-    const groups = {};
-    
-    messages.forEach(message => {
-      const day = new Date(message.createdAt).toDateString();
-      if (!groups[day]) {
-        groups[day] = [];
-      }
-      groups[day].push(message);
-    });
-    
-    return Object.entries(groups).map(([day, msgs]) => ({
-      day,
-      date: new Date(day),
-      messages: msgs
-    })).sort((a, b) => a.date - b.date);
-  };
-
-  if (isLoading && !conversation) {
+  if (isLoading) {
     return (
       <div className="message-detail-loading">
         <div className="loading-spinner"></div>
-        <p>Loading conversation...</p>
+        <p>Loading messages...</p>
       </div>
     );
   }
@@ -224,71 +119,59 @@ function MessageDetail() {
         <Link to="/messages" className="back-button">
           <i className="fas fa-arrow-left"></i>
         </Link>
-        
-        {conversation && (
-          <div className="conversation-user">
-            <div className="user-avatar">
-              {conversation.otherUser.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="user-info">
-              <h2>{conversation.otherUser.name}</h2>
-              <span className="user-status">
-                {conversation.otherUser.isOnline ? (
-                  <><span className="status-dot online"></span> Online</>
-                ) : (
-                  <><span className="status-dot offline"></span> Offline</>
-                )}
-              </span>
-            </div>
-          </div>
-        )}
+        <div className="chat-user-info">
+          <h2>{conversation?.otherUser.name}</h2>
+          {conversation?.product && (
+            <Link to={`/product/${conversation.product._id}`} className="product-link">
+              View Product
+            </Link>
+          )}
+        </div>
       </div>
 
-      {error && <div className="message-detail-error">{error}</div>}
+      {error && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-circle"></i>
+          <p>{error}</p>
+          <button onClick={fetchMessages}>Try Again</button>
+        </div>
+      )}
 
-      <div className="messages-list" ref={messageListRef}>
-        {groupMessagesByDay().map(group => (
-          <div key={group.day} className="message-day-group">
-            <div className="message-day-divider">
-              <span>{formatMessageDay(group.date)}</span>
+      <div className="messages-container">
+        {messages.map((message, index) => (
+          <div
+            key={message._id || index}
+            className={`message ${message.isCurrentUser ? 'sent' : 'received'}`}
+          >
+            <div className="message-content">
+              <p>{message.content}</p>
+              <span className="message-time">
+                {new Date(message.createdAt).toLocaleTimeString()}
+              </span>
+              {message.isCurrentUser && (
+                <span className="read-status">
+                  {message.isRead ? (
+                    <i className="fas fa-check-double"></i>
+                  ) : (
+                    <i className="fas fa-check"></i>
+                  )}
+                </span>
+              )}
             </div>
-            
-            {group.messages.map(message => (
-              <div 
-                key={message._id} 
-                className={`message-bubble ${message.sender._id === 'currentUser' || message.isCurrentUser ? 'sent' : 'received'}`}
-              >
-                <div className="message-content">{message.content}</div>
-                <div className="message-time">{formatMessageDate(message.createdAt)}</div>
-              </div>
-            ))}
           </div>
         ))}
-        
-        {isTyping && (
-          <div className="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        )}
-        
         <div ref={messagesEndRef} />
       </div>
 
-      <form className="message-input-container" onSubmit={handleSendMessage}>
+      <form className="message-input-form" onSubmit={handleSendMessage}>
         <input
           type="text"
-          placeholder="Type a message..."
           value={newMessage}
-          onChange={handleInputChange}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
           disabled={isSending}
         />
-        <button 
-          type="submit" 
-          className="send-button"
-          disabled={isSending || !newMessage.trim()}
-        >
+        <button type="submit" disabled={!newMessage.trim() || isSending}>
           {isSending ? (
             <div className="button-spinner"></div>
           ) : (

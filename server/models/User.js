@@ -2,6 +2,16 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const meetingAreaSchema = new mongoose.Schema({
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  authType: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
   name: {
     type: String,
     required: true,
@@ -36,9 +46,18 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false,
-    default : '',
-    
+    required: function() {
+      return this.authType === 'local'; // Only require password for local auth
+    }
+  },
+  authType: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  googleId: {
+    type: String,
+    sparse: true
   },
   phone: {
     type: String,
