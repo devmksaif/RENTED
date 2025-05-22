@@ -11,9 +11,9 @@ services:
     environment:
       - REACT_APP_API_URL=http://back:4000
     depends_on:
-      - server
+      - back
 
-  server:
+  back:
     container_name: back
     build:
       context: ./server
