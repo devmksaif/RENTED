@@ -186,7 +186,7 @@ const handleLogout = () => {
   // Add a function to check backend connection
   const checkBackendConnection = async () => {
     try {
-      const response = await fetch(process.env.REACT_APP_API_URL || 'http://localhost:4000');
+      const response = await fetch(process.env.REACT_APP_API_URL || 'http://back:4000');
       if (response.ok) {
         setIsConnected(true);
         console.log('✅ Connected to backend successfully');
