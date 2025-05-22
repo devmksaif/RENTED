@@ -79,19 +79,26 @@ function App() {
   const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
 
 // Initialize socket if user is logged in
-const token = localStorage.getItem('token');
-const userId = localStorage.getItem('userId');
-
 useEffect(() => {
-  if (token && userId) {
-    initializeSocket(userId);
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user && user._id) {
+        initializeSocket(user._id);
+      }
+    } catch (error) {
+      console.error('Error initializing socket:', error);
+    }
   }
   
   // Clean up socket on unmount
   return () => {
     closeSocket();
   };
-},[])
+}, []);
 
 // In your login handler function, add:
 
@@ -589,7 +596,7 @@ const handleLogout = () => {
               </>
             } />
 
-<Route path="/send/:id" element={
+<Route path="/messages/:id/:rec" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <MessageDetail />

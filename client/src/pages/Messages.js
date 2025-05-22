@@ -14,11 +14,10 @@ function Messages() {
   }, []);
 
   const fetchConversations = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const data = await getConversations();
       setConversations(data);
-      setError(null);
     } catch (error) {
       console.error('Error fetching conversations:', error);
       setError('Failed to load conversations. Please try again.');
@@ -27,23 +26,7 @@ function Messages() {
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString([], { weekday: 'long' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
-
-  const filteredConversations = conversations.filter(conversation => 
+  const filteredConversations = conversations.filter(conversation =>
     conversation.otherUser.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -61,7 +44,6 @@ function Messages() {
       <div className="messages-header">
         <h1>Messages</h1>
         <div className="search-container">
-          <i className="fas fa-search search-icon"></i>
           <input
             type="text"
             placeholder="Search conversations..."
@@ -71,7 +53,7 @@ function Messages() {
           />
           {searchTerm && (
             <button 
-              className="clear-search" 
+              className="clear-search"
               onClick={() => setSearchTerm('')}
             >
               <i className="fas fa-times"></i>
@@ -80,50 +62,62 @@ function Messages() {
         </div>
       </div>
 
-      {error && <div className="messages-error">{error}</div>}
-
-      {!error && filteredConversations.length === 0 && (
-        <div className="no-conversations">
-          <div className="no-conversations-icon">
-            <i className="fas fa-comments"></i>
-          </div>
-          <h3>No conversations yet</h3>
-          <p>
-            {searchTerm 
-              ? "No conversations match your search." 
-              : "Start messaging other users to see your conversations here."}
-          </p>
+      {error && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-circle"></i>
+          <p>{error}</p>
+          <button onClick={fetchConversations}>Try Again</button>
         </div>
       )}
 
       <div className="conversations-list">
-        {filteredConversations.map(conversation => (
-          <Link 
-            to={`/messages/${conversation._id}`} 
-            key={conversation._id} 
-            className={`conversation-item ${conversation.unreadCount > 0 ? 'unread' : ''}`}
-          >
-            <div className="conversation-avatar">
-              {conversation.otherUser.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="conversation-content">
-              <div className="conversation-header">
-                <h3 className="conversation-name">{conversation.otherUser.name}</h3>
-                <span className="conversation-time">{formatDate(conversation.lastMessage.createdAt)}</span>
-              </div>
-              <div className="conversation-preview">
-                <p className="conversation-last-message">
-                  {conversation.lastMessage.content.length > 50
-                    ? `${conversation.lastMessage.content.substring(0, 50)}...`
-                    : conversation.lastMessage.content}
-                </p>
-                {conversation.unreadCount > 0 && (
-                  <span className="unread-badge">{conversation.unreadCount}</span>
+        {filteredConversations.length > 0 ? (
+          filteredConversations.map(conversation => (
+            <Link
+              to={`/messages/${conversation._id}/${conversation.otherUser._id}`}
+              key={conversation._id}
+              className="conversation-card"
+            >
+              <div className="user-avatar">
+                <i className="fas fa-user"></i>
+                {conversation.otherUser.isOnline && (
+                  <span className="online-indicator"></span>
                 )}
               </div>
-            </div>
-          </Link>
-        ))}
+              <div className="conversation-content">
+                <div className="conversation-header">
+                  <h3>{conversation.otherUser.name}</h3>
+                  <span className="last-message-time">
+                    {new Date(conversation.lastMessage?.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="last-message">
+                  {conversation.lastMessage?.content || 'No messages yet'}
+                </p>
+              </div>
+              {conversation.unreadCount > 0 && (
+                <div className="unread-badge">
+                  {conversation.unreadCount}
+                </div>
+              )}
+            </Link>
+          ))
+        ) : (
+          <div className="no-conversations">
+            <i className="fas fa-comments"></i>
+            <h2>No conversations found</h2>
+            <p>
+              {searchTerm 
+                ? "No conversations match your search" 
+                : "Start a conversation by browsing items"}
+            </p>
+            {!searchTerm && (
+              <Link to="/" className="browse-button">
+                Browse Items
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

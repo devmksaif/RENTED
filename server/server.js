@@ -88,6 +88,7 @@ io.on('connection', (socket) => {
       // Emit to recipient if they're online
       const recipientSocketId = connectedUsers.get(recipientId);
       if (recipientSocketId) {
+        // Fix: Change io.br to io.to
         io.to(recipientSocketId).emit('new_message', {
           sender: socket.userId,
           content,

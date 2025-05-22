@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 router.use(auth);
 
 // Get all conversations for the current user
-router.get('/conversations', async (req, res) => {
+router.get('/conversations', auth,  async (req, res) => {
   try {
     // Find all conversations where the user is a participant
     const conversations = await Conversation.find({
@@ -22,7 +22,7 @@ router.get('/conversations', async (req, res) => {
     // Format the response to include the other user and unread count
     const formattedConversations = await Promise.all(conversations.map(async (conversation) => {
       const otherUser = conversation.participants.find(
-        participant => participant._id.toString() !== req.user._id.toString()
+        participant => participant.toString() !== req.user._id.toString()
       );
       
       // Get unread count for current user
@@ -70,6 +70,7 @@ router.get('/conversations/:id', async (req, res) => {
     const otherUser = conversation.participants.find(
       participant => participant._id.toString() !== req.user._id.toString()
     );
+    const otherInfo = User.findById(otherUser);
     
     // Get messages
     const messages = await Message.find({ conversation: conversationId })
@@ -106,9 +107,9 @@ router.get('/conversations/:id', async (req, res) => {
       conversation: {
         _id: conversation._id,
         otherUser: {
-          _id: otherUser._id,
-          name: otherUser.name,
-          email: otherUser.email,
+          _id: otherInfo._id,
+          name: otherInfo.name,
+          email: otherInfo.email,
           isOnline: false // This would be updated with socket.io
         },
         product: conversation.product
@@ -123,12 +124,9 @@ router.get('/conversations/:id', async (req, res) => {
 
 // Send a message
 router.post('/send', async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
   try {
     const { recipientId, content, productId } = req.body;
-    
+    console.log(recipientId,content)
     if (!recipientId || !content) {
       return res.status(400).json({ message: 'Recipient and message content are required' });
     }
@@ -157,7 +155,17 @@ router.post('/send', async (req, res) => {
         product: productId || null
       });
       
-      await conversation.save({ session });
+      await conversation.save();
+    } else {
+      // Update last message and increment unread count
+      conversation.lastMessage = {
+        content,
+        sender: req.user._id,
+        createdAt: new Date()
+      };
+      const currentUnreadCount = conversation.unreadCount.get(recipientId) || 0;
+      conversation.unreadCount.set(recipientId, currentUnreadCount + 1);
+      await conversation.save();
     }
     
     // Create new message
@@ -168,10 +176,7 @@ router.post('/send', async (req, res) => {
       isRead: false
     });
     
-    await message.save({ session });
-    
-    await session.commitTransaction();
-    session.endSession();
+    await message.save();
     
     // Populate sender info for response
     await message.populate('sender', 'name');
@@ -186,9 +191,6 @@ router.post('/send', async (req, res) => {
       conversationId: conversation._id
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    
     console.error('Error sending message:', error);
     res.status(500).json({ message: 'Error sending message', error: error.message });
   }
