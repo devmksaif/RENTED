@@ -245,29 +245,10 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
                 <i className="fas fa-search"></i>
               </button>
             </div>
-            <div className="radius-control">
-              <input
-                type="range"
-                min="1"
-                max="50"
-                value={searchRadius}
-                onChange={handleRadiusChange}
-                className="radius-slider"
-                
-              />
-              <span className="radius-value">{searchRadius} km</span>
-            </div>
+            
           </form>
           
-          <button 
-            className={`map-toggle-btn ${showMap ? 'active' : ''}`}
-            onClick={toggleMapView}
-            // Disable map view toggle if no products with location data are available in the filtered list
-            disabled={!validProducts.length}
-          >
-            <i className={`fas fa-${showMap ? 'list' : 'map-marker-alt'}`}></i>
-            {showMap ? 'List View' : 'Map View'}
-          </button>
+          
         </div>
         
         {/* Display the filter location label from App.js state */}

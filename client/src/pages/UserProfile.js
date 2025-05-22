@@ -883,18 +883,7 @@ function UserProfile() {
                       <span>Click on the map to set your location or drag the marker</span>
                     </div>
                     
-                    <div className="radius-control">
-                      <label htmlFor="radiusSlider">Location Radius: {radius}m</label>
-                      <input
-                        type="range"
-                        id="radiusSlider"
-                        min="50"
-                        max="500"
-                        step="50"
-                        value={radius}
-                        onChange={handleRadiusChange}
-                      />
-                    </div>
+                    
                     
                     <MapContainer 
                       key={mapKey}

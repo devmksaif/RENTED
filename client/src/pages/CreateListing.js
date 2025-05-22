@@ -531,7 +531,7 @@ const handleSearchResultClick = (result) => {
               </button>
             </div>
             
-            {/* Search results with animation */}
+            
             {searchResults.length > 0 && (
               <div className="location-search-results">
                 {searchResults.map((result, index) => (
