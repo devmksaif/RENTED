@@ -56,19 +56,43 @@ function ProductCard({ product, onAddToCart }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (showRentalOptions) {
-      // If rental options are shown, add to cart with selected duration
-      if (onAddToCart) {
-        onAddToCart(product, selectedDuration);
-        setAddSuccess(true);
-        setTimeout(() => setAddSuccess(false), 2000);
-      }
-      setShowRentalOptions(false);
-    } else {
-      // Show rental options first
-      setShowRentalOptions(true);
+    if (product.availability !== "Available") {
+      console.error("Product is not available for rent");
+      return;
+    }
+
+    // Validate rental duration against min/max if available
+    if (product.minRentalDays && selectedDuration < product.minRentalDays) {
+      console.error(`Minimum rental period is ${product.minRentalDays} days`);
+      return;
+    }
+
+    if (product.maxRentalDays && selectedDuration > product.maxRentalDays) {
+      console.error(`Maximum rental period is ${product.maxRentalDays} days`);
+      return;
+    }
+
+    // Add to cart directly without showing rental options
+    try {
+      saveCart({
+        productId: product._id,
+        quantity: 1,
+        duration: product.minRentalDays || 7,
+      });
+
+      setAddSuccess(true);
+      setTimeout(() => setAddSuccess(false), 2000);
+      
+      // Dispatch event to update cart
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (error) {
+      console.error("Error adding to cart:", error);
     }
   };
+
+  // Remove handleConfirmRental since we're adding directly to cart
+  
+   
 
   const handleRentalSelect = (e, duration) => {
     e.preventDefault();

@@ -6,7 +6,48 @@
   animation: fadeIn 0.5s ease-out forwards;
   margin-bottom: 30px;
 }
+.item-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+}
 
+.item-warning i {
+  margin-right: 8px;
+}
+
+.rental-dates {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-input-group label {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.date-input-group input {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.duration-select {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-left: 8px;
+}
 .cart-header {
   display: flex;
   justify-content: space-between;

@@ -94,39 +94,12 @@ function ProductDetail({ onAddToCart }) {
         return;
       }
 
-      // Validate rental duration against min/max
-      const minDays = product.minRentalDays || 1;
-      const maxDays = product.maxRentalDays || 30;
-
-      if (rentalDuration < minDays || rentalDuration > maxDays) {
-        setDateError(
-          `Rental period must be between ${minDays} and ${maxDays} days`
-        );
-        return;
-      }
-
-      // Calculate total price
-      const totalPrice = product.price * quantity * rentalDuration;
-
-      // Add to cart either through parent component or directly
-      if (onAddToCart) {
-        await onAddToCart(
-          product,
-          rentalDuration,
-          quantity,
-          startDate,
-          endDate
-        );
-      } else {
-        await saveCart({
-          productId: product._id,
-          quantity: quantity,
-          duration: rentalDuration,
-          startDate: startDate,
-          endDate: endDate,
-          totalPrice: totalPrice,
-        });
-      }
+      // Add to cart directly with default duration
+      await saveCart({
+        productId: product._id,
+        quantity: quantity,
+        duration: product.minRentalDays || 7,
+      });
 
       // Clear any previous errors
       setError(null);
@@ -369,101 +342,7 @@ function ProductDetail({ onAddToCart }) {
           </div>
 
           <div className="booking-form">
-            <h3>Book Now</h3>
-
-            {product.minRentalDays && product.maxRentalDays && (
-              <div className="rental-constraints">
-                <i className="fas fa-info-circle"></i>
-                <span>
-                  Rental period: {product.minRentalDays} to{" "}
-                  {product.maxRentalDays} days
-                </span>
-              </div>
-            )}
-
-            <div className="date-inputs">
-              <div className="date-input-group">
-                <label htmlFor="start-date">Start Date</label>
-                <input
-                  type="date"
-                  id="start-date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  max={maxDate.toISOString().split("T")[0]}
-                  required
-                  className="date-input"
-                />
-              </div>
-              <div className="date-input-group">
-                <label htmlFor="end-date">End Date</label>
-                <input
-                  type="date"
-                  id="end-date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || new Date().toISOString().split("T")[0]}
-                  max={maxDate.toISOString().split("T")[0]}
-                  required
-                  className="date-input"
-                />
-              </div>
-            </div>
-
-             
-
-            {dateError && (
-              <div className="date-error-message">
-                <i className="fas fa-exclamation-circle"></i> {dateError}
-              </div>
-            )}
-
-            {startDate && endDate && (
-              <div className="rental-summary">
-                <div className="rental-period">
-                  <span>Rental Period:</span>
-                  <span>
-                    {formatDate(startDate)} - {formatDate(endDate)} (
-                    {rentalDuration} days)
-                  </span>
-                </div>
-                <div className="rental-calculation">
-                  <div className="calc-row">
-                    <span>
-                      ${product.price} × {quantity}{" "}
-                      {quantity > 1 ? "items" : "item"} × {rentalDuration} days
-                    </span>
-                    <span>
-                      ${(product.price * quantity * rentalDuration).toFixed(2)}
-                    </span>
-                  </div>
-                  {product.deposit > 0 && (
-                    <div className="calc-row">
-                      <span>Security Deposit (refundable)</span>
-                      <span>${product.deposit.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {product.serviceFee > 0 && (
-                    <div className="calc-row">
-                      <span>Service Fee</span>
-                      <span>${product.serviceFee.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="calc-row total">
-                    <span>Total</span>
-                    <span>
-                      $
-                      {(
-                        product.price * quantity * rentalDuration +
-                        (product.deposit || 0) +
-                        (product.serviceFee || 0)
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
+           
             <div className="product-actions">
               <div className="quantity-selector">
                 <button
@@ -486,10 +365,8 @@ function ProductDetail({ onAddToCart }) {
                 className="add-to-cart-btn"
                 onClick={handleAddToCart}
                 disabled={
-                  product?.availability !== "Available" ||
-                  !startDate ||
-                  !endDate ||
-                  !!dateError
+                  product?.availability !== "Available" 
+                  
                 }
               >
                 <i className="fas fa-shopping-cart"></i> Add to Cart
@@ -504,13 +381,7 @@ function ProductDetail({ onAddToCart }) {
                 <i className="fas fa-comment"></i> Ask a Question
               </button>
             </div>
-
-            {!startDate || !endDate ? (
-              <div className="date-required-message">
-                <i className="fas fa-info-circle"></i> Please select rental
-                dates
-              </div>
-            ) : null}
+ 
 
             {addedToCart && (
               <div className="added-to-cart-message">

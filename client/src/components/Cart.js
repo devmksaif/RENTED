@@ -10,7 +10,7 @@ function Cart() {
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
-  // Add this helper function to format dates
+  // Helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return 'Not specified';
     try {
@@ -41,13 +41,30 @@ function Cart() {
         try {
           const localCart = JSON.parse(localCartString);
           if (localCart && Array.isArray(localCart.items)) {
-            setCartItems(localCart.items);
+            // Ensure date strings are properly formatted for date inputs
+            const formattedItems = localCart.items.map(item => ({
+              ...item,
+              startDate: item.startDate || '',
+              endDate: item.endDate || ''
+            }));
+            setCartItems(formattedItems);
           } else if (localCart && Array.isArray(localCart)) {
             // Handle case where cart might be stored as an array
-            setCartItems(localCart);
+            const formattedItems = localCart.map(item => ({
+              ...item,
+              startDate: item.startDate || '',
+              endDate: item.endDate || ''
+            }));
+            setCartItems(formattedItems);
           } else if (localCart && typeof localCart === 'object' && !Array.isArray(localCart)) {
             // Handle case where cart might be stored without 'items' property
-            setCartItems(localCart.items || []);
+            const items = localCart.items || [];
+            const formattedItems = items.map(item => ({
+              ...item,
+              startDate: item.startDate || '',
+              endDate: item.endDate || ''
+            }));
+            setCartItems(formattedItems);
           } else {
             setCartItems([]);
           }
@@ -64,15 +81,27 @@ function Cart() {
         try {
           const cartData = await getCart();
           if (cartData && Array.isArray(cartData.items)) {
-            setCartItems(cartData.items);
+            // Ensure date strings are properly formatted for date inputs
+            const formattedItems = cartData.items.map(item => ({
+              ...item,
+              startDate: item.startDate || '',
+              endDate: item.endDate || ''
+            }));
+            setCartItems(formattedItems);
             
             // Save to local storage with consistent structure
-            localStorage.setItem('cart', JSON.stringify({ items: cartData.items }));
+            localStorage.setItem('cart', JSON.stringify({ items: formattedItems }));
           } else if (cartData && Array.isArray(cartData)) {
-            setCartItems(cartData);
+            // Ensure date strings are properly formatted for date inputs
+            const formattedItems = cartData.map(item => ({
+              ...item,
+              startDate: item.startDate || '',
+              endDate: item.endDate || ''
+            }));
+            setCartItems(formattedItems);
             
             // Save to local storage with consistent structure
-            localStorage.setItem('cart', JSON.stringify({ items: cartData }));
+            localStorage.setItem('cart', JSON.stringify({ items: formattedItems }));
           }
         } catch (serverError) {
           console.error('Error fetching cart from server:', serverError);
@@ -88,7 +117,7 @@ function Cart() {
     }
   };
 
-  // Add this useEffect to listen for cart updates
+  // Listen for cart updates
   useEffect(() => {
     const handleCartUpdate = () => {
       fetchCart();
@@ -146,50 +175,118 @@ function Cart() {
       if (localStorage.getItem('token')) {
         const item = updatedItems.find(item => item.product._id === productId);
         if (item) {
-          await updateCartItem(productId, newQuantity, item.duration || 7);
+          await updateCartItem(productId, newQuantity, item.duration || 7, item.startDate, item.endDate);
         }
       }
       
-      // Dispatch custom event for cart update
-      window.dispatchEvent(new Event('cartUpdated'));
+      // Don't dispatch cartUpdated event here to prevent fetchCart from being called
+      // which would reset the UI state
     } catch (error) {
       console.error('Error updating quantity:', error);
       setError('Failed to update quantity. Please try again.');
-      // Revert to original state on error
-      fetchCart();
+      // Don't call fetchCart() here as it resets the UI state
     }
   };
 
   const handleUpdateDuration = async (productId, newDuration) => {
     try {
       // Update local state first for responsive UI
-      const updatedItems = cartItems.map(item => 
-        item.product._id === productId 
-          ? { ...item, duration: parseInt(newDuration) } 
-          : item
-      );
+      const updatedItems = cartItems.map(item => {
+        if (item.product._id === productId) {
+          // Calculate end date based on start date and new duration
+          let endDate = null;
+          let startDate = item.startDate;
+          
+          // If no start date exists, set it to today
+          if (!startDate) {
+            startDate = new Date().toISOString().split('T')[0];
+          }
+          
+          // Calculate end date
+          const startDateObj = new Date(startDate);
+          endDate = new Date(startDateObj);
+          endDate.setDate(startDateObj.getDate() + parseInt(newDuration));
+          endDate = endDate.toISOString().split('T')[0];
+          
+          return { 
+            ...item, 
+            duration: parseInt(newDuration),
+            startDate: startDate,
+            endDate: endDate
+          };
+        }
+        return item;
+      });
       
       setCartItems(updatedItems);
       
-      // Update local storage
-      const updatedCart = { items: updatedItems };
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-      
+      // Update local storage immediately
+      localStorage.setItem('cart', JSON.stringify({ items: updatedItems }));
+
       // Update on server if user is logged in
       if (localStorage.getItem('token')) {
         const item = updatedItems.find(item => item.product._id === productId);
         if (item) {
-          await updateCartItem(productId, item.quantity, parseInt(newDuration));
+          await updateCartItem(productId, item.quantity, parseInt(newDuration), item.startDate, item.endDate);
         }
       }
       
-      // Dispatch custom event for cart update
-      window.dispatchEvent(new Event('cartUpdated'));
+      // Don't dispatch cartUpdated event here to prevent fetchCart from being called
+      // which would reset the UI state
     } catch (error) {
       console.error('Error updating duration:', error);
       setError('Failed to update rental duration. Please try again.');
-      // Revert to original state on error
-      fetchCart();
+      // Don't call fetchCart() here as it resets the UI state
+    }
+  };
+
+  const handleUpdateDates = async (productId, startDate, endDate) => {
+    try {
+      // If start date is provided but end date is not, calculate end date based on duration
+      if (startDate && !endDate) {
+        const item = cartItems.find(item => item.product._id === productId);
+        if (item) {
+          const duration = item.duration || 7;
+          const startDateObj = new Date(startDate);
+          const newEndDate = new Date(startDateObj);
+          newEndDate.setDate(startDateObj.getDate() + parseInt(duration));
+          endDate = newEndDate.toISOString().split('T')[0];
+        }
+      }
+      
+      // If end date is provided but start date is not, use today as start date
+      if (!startDate && endDate) {
+        startDate = new Date().toISOString().split('T')[0];
+      }
+      
+      // Calculate duration from dates
+      let diffDays = 7; // Default duration
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end - start);
+        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Ensure minimum duration of 1 day
+        diffDays = Math.max(1, diffDays);
+      }
+      
+      // Don't update local state here since we already did it in the onChange handler
+      // This prevents the UI from flickering or resetting
+      
+      // Update on server if user is logged in
+      if (localStorage.getItem('token')) {
+        const item = cartItems.find(item => item.product._id === productId);
+        if (item) {
+          await updateCartItem(productId, item.quantity, diffDays, startDate, endDate);
+        }
+      }
+      
+      // Don't dispatch cartUpdated event here to prevent fetchCart from being called
+      // which would reset the UI state
+    } catch (error) {
+      console.error('Error updating dates:', error);
+      setError('Failed to update rental dates. Please try again.');
+      // Don't call fetchCart() here as it resets the UI state
     }
   };
 
@@ -288,10 +385,96 @@ function Cart() {
               <p className="cart-item-price">${item.price}/day</p>
               <div className="cart-item-category">{item.product.category}</div>
               
+              {item.product.availability !== "Available" && (
+                <div className="item-warning">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  This item is currently {item.product.availability.toLowerCase()}
+                </div>
+              )}
+              
               <div className="rental-duration">
-                <label htmlFor={`duration-${item.product._id}`}>Rental period:</label>
-                <div id={item.product._id}>
-                  {item.startDate ? formatDate(item.startDate) : 'Not specified'} - {item.endDate ? formatDate(item.endDate) : 'Not specified'}
+                <label htmlFor={`duration-${item.product._id}`}>Rental duration:</label>
+                <select 
+                  id={`duration-${item.product._id}`}
+                  value={item.duration || 7}
+                  onChange={(e) => handleUpdateDuration(item.product._id, e.target.value)}
+                  className="duration-select"
+                >
+                  {Array.from({ length: 30 }, (_, i) => i + 1).map(days => (
+                    <option key={days} value={days}>
+                      {days} {days === 1 ? 'day' : 'days'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="rental-dates">
+                <div className="date-input-group">
+                  <label>Start Date:</label>
+                  <input 
+                    type="date" 
+                    value={item.startDate || ''}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      let newEndDate = item.endDate;
+                      
+                      // If we have an end date, make sure it's after the new start date
+                      if (item.endDate && new Date(newStartDate) > new Date(item.endDate)) {
+                        const startDate = new Date(newStartDate);
+                        const endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + (item.duration || 7));
+                        newEndDate = endDate.toISOString().split('T')[0];
+                      } else if (!item.endDate) {
+                        // If no end date exists, calculate it based on duration
+                        const startDate = new Date(newStartDate);
+                        const endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + (item.duration || 7));
+                        newEndDate = endDate.toISOString().split('T')[0];
+                      }
+                      
+                      // Update the cart item immediately in local state
+                      const updatedItems = cartItems.map(cartItem => 
+                        cartItem.product._id === item.product._id 
+                          ? { ...cartItem, startDate: newStartDate, endDate: newEndDate } 
+                          : cartItem
+                      );
+                      setCartItems(updatedItems);
+                      
+                      // Update local storage immediately
+                      localStorage.setItem('cart', JSON.stringify({ items: updatedItems }));
+                      
+                      // Then call the API update
+                      handleUpdateDates(item.product._id, newStartDate, newEndDate);
+                    }}
+                  />
+                </div>
+                <div className="date-input-group">
+                  <label>End Date:</label>
+                  <input 
+                    type="date" 
+                    value={item.endDate || ''}
+                    min={item.startDate || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      // Make sure we have a start date
+                      const startDate = item.startDate || new Date().toISOString().split('T')[0];
+                      
+                      // Update the cart item immediately in local state
+                      const updatedItems = cartItems.map(cartItem => 
+                        cartItem.product._id === item.product._id 
+                          ? { ...cartItem, startDate: startDate, endDate: newEndDate } 
+                          : cartItem
+                      );
+                      setCartItems(updatedItems);
+                      
+                      // Update local storage immediately
+                      localStorage.setItem('cart', JSON.stringify({ items: updatedItems }));
+                      
+                      // Then call the API update
+                      handleUpdateDates(item.product._id, startDate, newEndDate);
+                    }}
+                  />
                 </div>
               </div>
               
