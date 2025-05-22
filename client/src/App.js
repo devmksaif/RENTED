@@ -27,6 +27,9 @@ import SelfieCapture from './pages/verification/SelfieCapture';
 import VerificationProcessing from './pages/verification/VerificationProcessing';
 import VerificationConfirmation from './pages/verification/VerificationConfirmation';
 import EditListing from './components/EditListing';
+import Messages from './pages/Messages';
+import { initializeSocket, closeSocket } from './services/socket';
+import MessageDetail from './pages/MessageDetail';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -74,6 +77,30 @@ function App() {
   const [filterRadius, setFilterRadius] = useState(10);
   // Add state for maximum product price
   const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
+
+// Initialize socket if user is logged in
+const token = localStorage.getItem('token');
+const userId = localStorage.getItem('userId');
+
+useEffect(() => {
+  if (token && userId) {
+    initializeSocket(userId);
+  }
+  
+  // Clean up socket on unmount
+  return () => {
+    closeSocket();
+  };
+},[])
+
+// In your login handler function, add:
+
+
+// In your logout handler function, add:
+const handleLogout = () => {
+  // Close socket connection
+  closeSocket();
+};
 
   // Define authoritative list of available categories
   const availableCategories = [
@@ -536,12 +563,22 @@ function App() {
                 <Footer />
               </>
             }
+            
             />
+          
             {/* Product Detail Page */}
             <Route path="/product/:id" element={
               <>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
                 <ProductDetail onAddToCart={addToCart} />
+                <Footer />
+              </>
+            } />
+
+<Route path="/send/:id" element={
+              <>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <MessageDetail />
                 <Footer />
               </>
             } />
@@ -559,7 +596,13 @@ function App() {
                 <Footer />
               </>
             } />
-            
+              <Route path="/messages" element={
+              <>
+                <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
+                <Messages />
+                <Footer />
+              </>
+            } />
             {/* Protected Routes */}
             <Route path="/profile" element={
               <ProtectedRoute>
@@ -686,3 +729,4 @@ function App() {
 }
 
 export default App;
+

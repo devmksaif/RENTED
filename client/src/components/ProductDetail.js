@@ -342,7 +342,7 @@ function ProductDetail({ onAddToCart }) {
           </div>
 
           <div className="booking-form">
-           
+          
             <div className="product-actions">
               <div className="quantity-selector">
                 <button
@@ -409,9 +409,13 @@ function ProductDetail({ onAddToCart }) {
                   hours
                 </div>
               </div>
-              <button className="contact-owner-btn">
-                <i className="fas fa-comment"></i> Contact
-              </button>
+              
+              <Link
+                to={`/send/${product.owner}`}
+                className="contact-owner-btn"
+              >
+               Contact  <i className="fas fa-comment"></i>
+              </Link>
             </div>
           </div>
 

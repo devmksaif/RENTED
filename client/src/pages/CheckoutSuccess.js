@@ -109,15 +109,15 @@ function CheckoutSuccess() {
           <h3>Order Summary</h3>
           <div className="order-items">
             {bookings.map((booking, index) => (
-              <div key={booking._id} className="order-item">
+              <div key={booking._id || index} className="order-item">
                 <div className="item-image">
                   <img 
-                    src={booking.product?.image || 'https://via.placeholder.com/80x80'} 
-                    alt={booking.product?.title || `Item ${index + 1}`} 
+                    src={booking.product?.image || booking.image || 'https://via.placeholder.com/80x80'} 
+                    alt={booking.product?.title || booking.title || `Item ${index + 1}`} 
                   />
                 </div>
                 <div className="item-details">
-                  <h4>{booking.product?.title || `Item ${index + 1}`}</h4>
+                  <h4>{booking.product?.title || booking.title || `Item ${index + 1}`}</h4>
                   <p>Quantity: {booking.quantity}</p>
                   <p>Rental Period: {new Date(booking.startDate).toLocaleDateString()} to {new Date(booking.endDate).toLocaleDateString()}</p>
                   <p>Duration: {Math.ceil((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24))} days</p>

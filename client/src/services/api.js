@@ -1012,3 +1012,72 @@ export const reverseGeocode = async (latitude, longitude) => {
     throw error;
   }
 };
+
+// Messaging APIs
+export const getConversations = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/messages/conversations`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    throw error;
+  }
+};
+
+export const getMessages = async (conversationId) => {
+  try {
+    const response = await axios.get(`${API_URL}/messages/conversations/${conversationId}`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw error;
+  }
+};
+
+export const sendMessage = async (recipientId, content, productId = null) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/messages/send`,
+      { recipientId, content, productId },
+      {
+        headers: getAuthHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
+export const getUnreadMessageCount = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/messages/unread/count`, {
+      headers: getAuthHeader(),
+    });
+    return response.data.count;
+  } catch (error) {
+    console.error("Error fetching unread message count:", error);
+    return 0;
+  }
+};
+
+export const markConversationAsRead = async (conversationId) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/messages/conversations/${conversationId}/read`,
+      {},
+      {
+        headers: getAuthHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error marking conversation as read:', error);
+    throw error;
+  }
+};

@@ -14,6 +14,7 @@ function Header({ cartItemCount = 0 }) {
   const [localCartCount, setLocalCartCount] = useState(0);
   const { unreadCount } = useNotifications();
   const [verification,setVerification] = useState('');
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,13 +113,21 @@ function Header({ cartItemCount = 0 }) {
                 <NotificationDropdown onClose={() => setShowNotifications(false)} />
               )}
             </div>
-            
+            {isLoggedIn && (
+              <Link to="/messages" className="message-icon">
+                <i className="fas fa-envelope"></i>
+                {unreadMessages > 0 && (
+                  <span className="message-badge">{unreadMessages}</span>
+                )}
+              </Link>
+            )}
             <Link to="/cart" className="cart-icon">
               <i className="fas fa-shopping-cart"></i>
               {(cartItemCount || localCartCount) > 0 && (
                 <span className="cart-badge">{cartItemCount || localCartCount}</span>
               )}
             </Link>
+           
             
             <div className="profile-icon-wrapper">
               <div 
