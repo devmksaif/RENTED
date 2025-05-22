@@ -12,6 +12,7 @@ router.use(auth);
 // Get all conversations for the current user
 router.get('/conversations', auth,  async (req, res) => {
   try {
+    
     // Find all conversations where the user is a participant
     const conversations = await Conversation.find({
       participants: req.user._id
@@ -30,10 +31,13 @@ router.get('/conversations', auth,  async (req, res) => {
       
       return {
         _id: conversation._id,
+        product : otherUser.product,
         otherUser: {
+          
           _id: otherUser._id,
           name: otherUser.name,
           email: otherUser.email,
+          
           isOnline: false // This would be updated with socket.io
         },
         lastMessage: conversation.lastMessage,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getConversations } from '../services/api';
+import { getConversations, getProductById } from '../services/api';
 import '../styles/Messages.css';
 
 function Messages() {
@@ -8,6 +8,7 @@ function Messages() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+ 
 
   useEffect(() => {
     fetchConversations();

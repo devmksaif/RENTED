@@ -434,7 +434,7 @@ function ProductDetail({ onAddToCart }) {
                 <i className="fas fa-user-circle"></i>
               </div>
               <div className="owner-details">
-                <div className="owner-name">Verified Owner</div>
+                <div className="owner-name">{owner.name}</div>
                 <div className="owner-rating">
                   <i className="fas fa-star"></i> {product.rating} {product.reviews}
                 </div>
