@@ -99,7 +99,7 @@ router.get('/user', auth, async (req, res) => {
 // Get a single product (public route)
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('owner', 'name');
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }

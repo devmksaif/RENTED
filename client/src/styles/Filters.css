@@ -110,16 +110,16 @@
     padding-bottom: 0.8rem;
     margin-bottom: 1.5rem;
     border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .filters-header h3 {
-    font-size: 1.35rem;
-    font-weight: 700;
-    margin: 0;
-    color: #333;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+  color: #333;
 }
 
 .reset-filters-btn {
@@ -194,19 +194,19 @@
 }
 
 .location-filter-form .filter-input {
-    width: 100%;
+  width: 100%;
     padding: 0.6rem 0.6rem 0.6rem 2.2rem; /* Adjust padding for potential icon */
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    font-size: 0.9rem;
-    transition: all 0.3s;
-    box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  box-sizing: border-box;
 }
 
 .location-filter-form .filter-input:focus {
-    outline: none;
-    border-color: #4CAF50;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 /* Optional: Icon for location input */
@@ -325,7 +325,7 @@
   }
 
   .apply-btn, .cancel-btn {
-      width: 100%;
+    width: 100%;
       text-align: center;
   }
 }

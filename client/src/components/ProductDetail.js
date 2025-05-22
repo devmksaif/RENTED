@@ -180,7 +180,7 @@ function ProductDetail({ onAddToCart }) {
       </div>
     );
   }
-  const handleContactOwner = async () => {
+  const handleContactOwner = async (messageContent) => {
     try {
       // Check if user is logged in
       const token = localStorage.getItem('token');
@@ -192,11 +192,11 @@ function ProductDetail({ onAddToCart }) {
       // Navigate to MessageDetail with product owner ID
       if (product && product.owner) {
         // Create conversation or get existing one
-        const response = await sendMessage(product.owner, `Hi, I'm interested in renting your ${product.title}`);
+        const response = await sendMessage(product.owner._id, messageContent);
         
         // Navigate to the conversation
         if (response && response.conversationId) {
-          navigate(`/messages/${response.conversationId}/${product.owner}`);
+          navigate(`/messages/${response.conversationId}/${product.owner._id}`);
         } else {
           setError('Failed to start conversation. Please try again.');
         }
@@ -403,7 +403,7 @@ function ProductDetail({ onAddToCart }) {
               <button className="request-booking">
                 <i className="fas fa-calendar-check"></i> Request Booking
               </button>
-              <button className="contact-owner">
+              <button className="ask-question contact-owner" onClick={() => handleContactOwner('I have a question')}>
                 <i className="fas fa-comment"></i> Ask a Question
               </button>
             </div>
@@ -426,7 +426,7 @@ function ProductDetail({ onAddToCart }) {
                 <i className="fas fa-user-circle"></i>
               </div>
               <div className="owner-details">
-                <div className="owner-name">Verified Owner</div>
+                <div className="owner-name">{product.owner?.name || 'Verified Owner'}</div>
                 <div className="owner-rating">
                   <i className="fas fa-star"></i> 4.8 (120 rentals)
                 </div>
@@ -436,7 +436,7 @@ function ProductDetail({ onAddToCart }) {
               </div>
               
               <button
-                onClick={handleContactOwner}
+                onClick={() => handleContactOwner(`Hi, I'm interested in renting your ${product.title}`)}
                 className="contact-owner-btn"
               >
                 Contact <i className="fas fa-comment"></i>

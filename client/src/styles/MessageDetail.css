@@ -1,9 +1,8 @@
 .message-detail-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: calc(100vh - 64px);
+  width: 100%;
 }
 
 .message-detail-header {
@@ -46,6 +45,7 @@
 .message {
   display: flex;
   margin-bottom: 10px;
+  justify-content: flex-start;
 }
 
 .message.sent {
