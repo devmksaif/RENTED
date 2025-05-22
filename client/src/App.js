@@ -27,6 +27,7 @@ import SelfieCapture from './pages/verification/SelfieCapture';
 import VerificationProcessing from './pages/verification/VerificationProcessing';
 import VerificationConfirmation from './pages/verification/VerificationConfirmation';
 import EditListing from './components/EditListing';
+import { BrowserRouter } from 'react-router-dom';
 import Messages from './pages/Messages';
 import { initializeSocket, closeSocket } from './services/socket';
 import MessageDetail from './pages/MessageDetail';
@@ -563,9 +564,9 @@ const handleLogout = () => {
   };
 
   return (
-    <Router>
+    <BrowserRouter>
       <NotificationProvider>
-        <div className="App">
+        <div>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -675,6 +676,20 @@ const handleLogout = () => {
               </RenterRoute>
             } />
             
+            {/* Add this new route for OAuth success */}
+            <Route 
+              path="/auth/success" 
+              element={
+                <Navigate 
+                  to="/" 
+                  replace 
+                  state={{ 
+                    token: new URLSearchParams(window.location.search).get('token') 
+                  }} 
+                />
+              } 
+            />
+            
             {/* Admin Routes */}
             <Route path="/admin/*" element={
               <AdminRoute>
@@ -767,10 +782,11 @@ const handleLogout = () => {
             <Route path="/verify/selfie" element={<SelfieCapture />} />
             <Route path="/verify/processing" element={<VerificationProcessing />} />
             <Route path="/verify/confirmation" element={<VerificationConfirmation />} />
+            <Route path="/auth/google" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </NotificationProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 
