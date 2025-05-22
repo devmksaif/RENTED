@@ -114,11 +114,13 @@ function Header({ cartItemCount = 0 }) {
               )}
             </div>
             {isLoggedIn && (
-              <Link to="/messages" className="message-icon">
-                <i className="fas fa-envelope"></i>
-                {unreadMessages > 0 && (
-                  <span className="message-badge">{unreadMessages}</span>
-                )}
+              <Link to="/messages" className="message-icon-wrapper">
+                <div className="message-icon">
+                  <i className="fas fa-envelope"></i>
+                  {unreadMessages > 0 && (
+                    <span className="message-badge">{unreadMessages}</span>
+                  )}
+                </div>
               </Link>
             )}
             <Link to="/cart" className="cart-icon">
