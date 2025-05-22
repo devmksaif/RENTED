@@ -8,15 +8,14 @@
   top: 90px;
   animation: fadeIn 0.5s ease-out forwards;
   border: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .filters-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.5rem;
   padding-bottom: 0.8rem;
   border-bottom: 1px solid #eee;
 }
@@ -51,6 +50,7 @@
 }
 
 .filter-section {
+  margin-bottom: 1.5rem;
 }
 
 .filter-section h4 {
@@ -94,6 +94,7 @@
 
 .location-search-form {
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .location-input-wrapper {
@@ -131,12 +132,12 @@
   cursor: not-allowed;
 }
 
-.filter-section:has(.MuiGrid-container) {
-  margin-bottom: 1.5rem;
+.filter-section .MuiGrid-container {
+  margin-top: 0.5rem;
 }
 
 .radius-filter {
-  margin-top: 1.2rem;
+  margin-top: 1.5rem;
   padding-top: 1.2rem;
   border-top: 1px dashed #cfd8dc;
 }
@@ -216,7 +217,6 @@
     overflow-y: visible;
     margin-bottom: 20px;
     padding: 1.2rem;
-    flex-direction: column;
   }
 }
 
