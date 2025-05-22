@@ -126,6 +126,7 @@ const DEFAULT_COORDINATES = {
 };
 
 function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
+  console.log('ProductList received products:', products);
   const [searchLocation, setSearchLocation] = useState(null);
   const [nearbyProducts, setNearbyProducts] = useState([]);
   const [nearbyLoading, setNearbyLoading] = useState(false);
@@ -137,7 +138,7 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
   const [mapZoom, setMapZoom] = useState(13);
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   
-  // Update when filter location changes
+  // Update when filter location changes (for map display)
   useEffect(() => {
     if (filterLocation && filterLocation.latitude && filterLocation.longitude) {
       setSearchLocation({
@@ -146,8 +147,13 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
         label: filterLocation.label || 'Search location'
       });
       
-      // Clear any previous search query to avoid confusion
-      setLocationSearchQuery('');
+      // Keep search query for input, but it doesn't control filtering here anymore
+      if (filterLocation.label) {
+         setLocationSearchQuery(filterLocation.label);
+      }
+    } else {
+       setSearchLocation(null);
+       setLocationSearchQuery('');
     }
     
     // Update radius if provided from filter
@@ -156,36 +162,12 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
     }
   }, [filterLocation, filterRadius]);
   
-  // Fetch nearby products when location or search radius changes
-  useEffect(() => {
-    const fetchNearbyProducts = async () => {
-      if (!searchLocation) return;
-      
-      setNearbyLoading(true);
-      try {
-        const data = await getNearbyProducts(
-          searchLocation.latitude,
-          searchLocation.longitude,
-          searchRadius
-        );
-        setNearbyProducts(data);
-        setNearbyError(null);
-      } catch (error) {
-        console.error('Error fetching nearby products:', error);
-        setNearbyError('Failed to load nearby products.');
-      } finally {
-        setNearbyLoading(false);
-      }
-    };
-    
-    if (searchLocation) {
-      fetchNearbyProducts();
-    }
-  }, [searchLocation, searchRadius]);
-  
-  // Handle radius change
+  // Handle radius change - This should ideally trigger a filter change in App.js now
   const handleRadiusChange = (e) => {
-    setSearchRadius(Number(e.target.value));
+     const newRadius = Number(e.target.value);
+     setSearchRadius(newRadius);
+     // This should likely call a prop function like onRadiusFilterChange
+     // For now, just updating local state and map circle
   };
   
   // Toggle map view
@@ -199,35 +181,52 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
   
   // Handle product click on map
   const handleProductClick = (productId) => {
-    setSelectedProduct(productId);
+    setSelectedProduct(productId); // Keep for highlighting maybe
   };
   
-  // Handle location search
+  // Handle location search - This should trigger a location filter change in App.js
   const handleLocationSearch = (e) => {
     e.preventDefault();
     
     if (!locationSearchQuery.trim()) return;
    
-    // In a real app, you would call a geocoding service here
-    // For now, simulate a search with default coordinates
-    setTimeout(() => {
-      // This would be the result from geocoding service
-      const searchResult = {
-        label: locationSearchQuery,
-        latitude: DEFAULT_COORDINATES.latitude,
-        longitude: DEFAULT_COORDINATES.longitude
-      };
-      
-      setSearchLocation(searchResult);
-      
-    }, 1000);
+    // This part now needs to call onLocationSelect from App.js
+    // In a real app, you would geocode locationSearchQuery first
+    
+    // Simulate geocoding and call the prop function
+    // Assuming onLocationSelect exists and updates filterLocation in App.js
+    // And assuming App.js's applyFilters handles the geospatial filtering
+    const simulatedGeocodedLocation = { 
+       label: locationSearchQuery,
+       latitude: DEFAULT_COORDINATES.latitude, // Using default as before
+       longitude: DEFAULT_COORDINATES.longitude
+    };
+    
+    // Call the prop function to update filter in App.js
+    // onLocationSelect(simulatedGeocodedLocation);
+    // Need to handle the search query as a filter in App.js as well, or rely on geocoded coords
+
+    // For now, let's just update searchLocation state locally for map display
+    // The actual filtering is expected to happen in App.js via filterLocation prop
+     setSearchLocation(simulatedGeocodedLocation);
+     // Also likely need to trigger filtering in App.js based on this location
+     // This might require a new prop like onLocationSearchSubmit
+
+      // Let's call onLocationSelect directly which is a prop from App.js
+      if(filterLocation && filterLocation.onLocationSelect) {
+         filterLocation.onLocationSelect(simulatedGeocodedLocation);
+      }
+      // Note: The search query text itself is not used for filtering here anymore
+      // App.js's applyFilters uses the filterLocation (geocoded) for filtering
+
   };
   
-  // Determine which products to display
-  const productsToDisplay = searchLocation ? nearbyProducts : products;
+  // Determine which products to display - ALWAYS use the products prop from App.js
+  const productsToDisplay = products; // Use the filtered products from App.js
   
   // Check if we have products with valid coordinates for map
-  const validProducts = productsToDisplay.filter(p => p && p.location.includes(locationSearchQuery));
+  // Use products (filtered list) for map markers now
+  const validProducts = productsToDisplay.filter(p => p && p.latitude && p.longitude);
 
   return (
     <div className="product-list-container">
@@ -238,7 +237,7 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
               <input
                 type="text"
                 placeholder="Search by location..."
-                value={locationSearchQuery}
+                value={locationSearchQuery} // Use local state for input display
                 onChange={(e) => setLocationSearchQuery(e.target.value)}
                 className="location-search-input"
               />
@@ -263,38 +262,43 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
           <button 
             className={`map-toggle-btn ${showMap ? 'active' : ''}`}
             onClick={toggleMapView}
-            disabled={!searchLocation}
+            // Disable map view toggle if no products with location data are available in the filtered list
+            disabled={!validProducts.length}
           >
             <i className={`fas fa-${showMap ? 'list' : 'map-marker-alt'}`}></i>
             {showMap ? 'List View' : 'Map View'}
           </button>
         </div>
         
-        {searchLocation && (
+        {/* Display the filter location label from App.js state */}
+        {filterLocation && ( 
           <div className="location-info">
             <i className="fas fa-map-marker-alt"></i>
             <span>
-              Showing products near: {searchLocation.label}
+              Showing products near: {filterLocation.label}
             </span>
           </div>
         )}
       </div>
       
-      {nearbyLoading && (
+      {/* Nearby loading/error messages might be less relevant here now if fetching is in App.js */}
+      {/* Consider moving these to App.js or adjusting */} 
+      {nearbyLoading && ( // Still show loading if App.js is fetching nearby
         <div className="loading-message">
           <div className="loading-spinner"></div>
-          <p>Finding products near {locationSearchQuery || searchLocation?.label || 'selected location'}...</p>
+          <p>Loading products...</p>
         </div>
       )}
       
-      {nearbyError && (
+      {nearbyError && ( // Still show error if App.js had an error fetching nearby
         <div className="error-message">
           <i className="fas fa-exclamation-circle"></i>
           <p>{nearbyError}</p>
         </div>
       )}
       
-      {!nearbyLoading && searchLocation && showMap && (
+      {/* Only show map if showMap is true AND we have a search location AND valid products with coordinates */}
+      {!nearbyLoading && searchLocation && showMap && validProducts.length > 0 && (
         <div className="product-map-container">
           <div className="map-legend">
             <div className="legend-item">
@@ -311,6 +315,8 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
             </div>
           </div>
           
+          {/* MapContainer uses searchLocation from local state for center */}
+          {/* And validProducts (filtered from App.js) for markers */}
           <MapContainer 
             key={mapKey}
             center={[searchLocation.latitude, searchLocation.longitude]} 
@@ -326,45 +332,53 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
             <ZoomControl position="bottomright" />
             
             {/* Search location marker */}
-            <Marker 
-              position={[searchLocation.latitude, searchLocation.longitude]}
-              icon={SearchLocationIcon}
-            >
-              <Popup>
-                <div className="map-popup user-popup">
-                  <h3>Search Location</h3>
-                  <p>{searchLocation.label}</p>
-                  <p>Products within {searchRadius} km will show here</p>
-                </div>
-              </Popup>
-            </Marker>
+            {searchLocation && (
+              <Marker 
+                position={[searchLocation.latitude, searchLocation.longitude]}
+                icon={SearchLocationIcon}
+              >
+                <Popup>
+                  <div className="map-popup user-popup">
+                    <h3>Search Location</h3>
+                    <p>{searchLocation.label}</p>
+                    <p>Products within {searchRadius} km are shown</p>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
             
             {/* Search radius circle */}
-            <Circle 
-              center={[searchLocation.latitude, searchLocation.longitude]}
-              radius={searchRadius * 1000}
-              pathOptions={{
-                fillColor: '#4CAF50',
-                fillOpacity: 0.1,
-                color: '#4CAF50',
-                weight: 1
-              }}
-            />
+            {searchLocation && searchRadius > 0 && (
+              <Circle 
+                center={[searchLocation.latitude, searchLocation.longitude]}
+                radius={searchRadius * 1000} // Radius in meters
+                pathOptions={{
+                  fillColor: '#4CAF50',
+                  fillOpacity: 0.1,
+                  color: '#4CAF50',
+                  weight: 1
+                }}
+              />
+            )}
             
             {/* Product markers */}
             {validProducts.length > 0 && (
               <ProductMarkers 
-                products={validProducts} 
+                products={validProducts} // Use validProducts from filtered list
                 handleProductClick={handleProductClick}
               />
             )}
             
-            <RecenterMap position={[searchLocation.latitude, searchLocation.longitude]} />
+            {/* Recenter map to search location */}
+            {searchLocation && (
+              <RecenterMap position={[searchLocation.latitude, searchLocation.longitude]} />
+            )}
             
-            {validProducts.length > 0 && (
+            {/* Fit bounds only if we have valid products to show */}
+            {searchLocation && validProducts.length > 0 && (
               <FitBoundsToMarkers 
                 searchLocation={searchLocation}
-                products={validProducts}
+                products={validProducts} // Use validProducts
               />
             )}
           </MapContainer>
@@ -374,26 +388,31 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
               <i className="fas fa-map-marker-alt"></i>
               <span>Showing {validProducts.length} products on map</span>
             </div>
+            {/* Adjusted message */} 
             {validProducts.length === 0 && (
               <div className="stat-item warning">
                 <i className="fas fa-exclamation-triangle"></i>
-                <span>No products found within {searchRadius}km. Try increasing the radius or searching a different location.</span>
+                <span>No products with location data found matching filters within {searchRadius}km of search location. Try adjusting filters or location.</span>
               </div>
             )}
           </div>
         </div>
       )}
       
-      {(!showMap || !searchLocation) && (
+      {/* Show list view if map is not shown or no search location is set or no valid products with coordinates for map*/}
+      {(!showMap || !searchLocation || validProducts.length === 0) && ( // Added validProducts.length === 0 condition
         <div className="product-grid">
-          {productsToDisplay.length > 0 ? (
+          {productsToDisplay.length > 0 ? ( // productsToDisplay is now always the filtered list
             productsToDisplay.map((product) => (
-              <ProductCard 
-                key={product._id} 
-                product={product} 
-                onAddToCart={onAddToCart} 
-                isSelected={product._id === selectedProduct}
-              />
+              // Ensure product and product._id exist
+              product && product._id ? (
+                <ProductCard 
+                  key={product._id} 
+                  product={product} 
+                  onAddToCart={onAddToCart} 
+                  isSelected={product._id === selectedProduct}
+                />
+              ) : null
             ))
           ) : (
             <div className="no-products">
@@ -402,13 +421,13 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
               </div>
               <div className="no-products-text">
                 {searchLocation 
-                  ? `No products found near "${searchLocation.label}"`
+                  ? `No products found matching filters near "${searchLocation.label}"` // Adjusted message
                   : "No products found matching your criteria"}
               </div>
               <div className="no-products-subtext">
                 {searchLocation
-                  ? "Try increasing the search radius or search for a different location" 
-                  : "Try adjusting your filters or search for a specific location"}
+                  ? "Try adjusting your filters, increasing the search radius or searching for a different location" // Adjusted message
+                  : "Try adjusting your filters or searching for a specific location"}
               </div>
             </div>
           )}
@@ -416,7 +435,8 @@ function ProductList({ products, onAddToCart, filterLocation, filterRadius }) {
       )}
       
       {/* Hand-to-hand payment notice */}
-      <div className="payment-notice">
+      {/* Removed duplicate payment notice if it exists */} 
+       <div className="payment-notice">
         <i className="fas fa-handshake"></i>
         <p>All payments are made hand-to-hand. Bookings must be validated by the renter.</p>
       </div>

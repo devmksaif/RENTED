@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // Update the imports to include saveCart and clearCart
 import { getCart, saveCart, clearCart as clearCartFromServer, getProducts, getNearbyProducts } from './services/api';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -56,7 +56,7 @@ function App() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [filters, setFilters] = useState({
     category: '',
-    priceRange: 50,
+    priceRange: [0, 500],
     location: '',
     availability: '',
     rating: '',
@@ -72,6 +72,23 @@ function App() {
   const [searchRadius, setSearchRadius] = useState(10);
   const [filterLocation, setFilterLocation] = useState(null);
   const [filterRadius, setFilterRadius] = useState(10);
+  // Add state for maximum product price
+  const [maxPrice, setMaxPrice] = useState(500); // Initial default max price
+
+  // Define authoritative list of available categories
+  const availableCategories = [
+    'Electronics',
+    'Clothing',
+    'Home & Garden',
+    'Sports & Outdoors',
+    'Vehicles',
+    'Tools & Equipment',
+    'Toys & Games',
+    'Other',
+    'Furniture', // Added from Filters list
+    'Tools',     // Added from Filters list
+    'Sports'     // Added from Filters list
+  ];
 
   // Handler for location selection from Filters
   const handleLocationSelect = (location) => {
@@ -292,20 +309,40 @@ function App() {
   
   // Use useCallback to memoize the applyFilters function
   const applyFilters = React.useCallback(() => {
-    // Start with all products
-    let filtered = products;
+    console.log('Applying filters with state:', filters); // Log when applyFilters runs and current filters
+    // Start with all products, either initial fetch or nearby products
+    let filtered = nearbyProducts.length > 0 ? nearbyProducts : products; // Start filtering from the appropriate product list
+    
+    console.log(`Products before filtering: ${filtered.length}`); // Log count before filtering
     
     // Apply category filter
-    if (filters.category) {
-      filtered = filtered.filter(product => product.category === filters.category);
+    // Updated logic for multiple category selection
+    if (Array.isArray(filters.category) && filters.category.length > 0) {
+      filtered = filtered.filter(product =>
+        Array.isArray(product.category) 
+          ? product.category.some(cat => filters.category.includes(cat)) // Check if product has at least one of the selected categories
+          : filters.category.includes(product.category) // Fallback for single string product category
+      );
+    } else if (typeof filters.category === 'string' && filters.category) { // Keep fallback for old single string filter
+       filtered = filtered.filter(product =>
+         Array.isArray(product.category)
+           ? product.category.includes(filters.category)
+           : product.category === filters.category
+       );
     }
     
     // Apply price range filter
-    if (filters.priceRange) {
-      filtered = filtered.filter(product => product.price <= filters.priceRange);
+    if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
+      const [minPrice, maxPrice] = filters.priceRange;
+      console.log(`Applying price filter: ${minPrice} to ${maxPrice}`); // Log price filter range
+      filtered = filtered.filter(product => product.price >= minPrice && product.price <= maxPrice);
+    } else if (typeof filters.priceRange === 'number') { // Keep fallback for old single number filter if necessary
+       console.log(`Applying price filter (single value): <= ${filters.priceRange}`); // Log single value price filter
+       filtered = filtered.filter(product => product.price <= filters.priceRange);
     }
     
     // Apply location filter
+    // Note: This currently filters by text. Geospatial filtering would be more advanced.
     if (filters.location) {
       filtered = filtered.filter(product => 
         product.location.toLowerCase().includes(filters.location.toLowerCase())
@@ -322,17 +359,20 @@ function App() {
       filtered = filtered.filter(product => product.rating >= parseInt(filters.rating));
     }
     
-    // Apply search query
+    // Apply search query - Note: This should ideally be done on the backend for large datasets
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
+        // Check if any category in the array includes the search query
+        (Array.isArray(product.category) && product.category.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+        (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase())) // Fallback for single string category
       );
     }
     
     setFilteredProducts(filtered);
-  }, [filters, products, searchQuery]); // Dependencies for useCallback
+    console.log(`Products after filtering: ${filtered.length}`); // Log count after filtering
+  }, [filters, products, searchQuery, nearbyProducts]); // Dependencies for useCallback
   
 
   useEffect(() => {
@@ -368,19 +408,25 @@ function App() {
   
   // Remove the second addToCart declaration and keep only the async version
   const handleFilterChange = (filterName, value) => {
+    console.log(`Filter changed: ${filterName}`, value); // Log filter changes
     if (filterName === 'radius') {
       setFilterRadius(value);
     }
-    setFilters({
-      ...filters,
-      [filterName]: value
+    setFilters(prevFilters => {
+      const newFilters = {
+        ...prevFilters,
+        [filterName]: value
+      };
+      console.log('New filters state:', newFilters); // Log the new filter state
+      return newFilters;
     });
   };
   
   const resetFilters = () => {
+    console.log('Resetting filters'); // Log reset
     setFilters({
       category: '',
-      priceRange: 50,
+      priceRange: [0, maxPrice], // Reset max price to the current maxPrice
       location: '',
       availability: '',
       rating: '',
@@ -423,6 +469,51 @@ function App() {
     });
   };
   
+  // Effect to calculate max price whenever products change
+  useEffect(() => {
+    if (products.length > 0) {
+      const highestPrice = Math.max(...products.map(product => product.price));
+      setMaxPrice(highestPrice);
+      
+      // Also update the priceRange filter if the current max is higher than the previous max
+      // This prevents the slider from being stuck at an old lower max
+      setFilters(prevFilters => {
+        const currentMin = prevFilters.priceRange[0];
+        const currentMax = prevFilters.priceRange[1];
+        if (currentMax < highestPrice) {
+          return { ...prevFilters, priceRange: [currentMin, highestPrice] };
+        } else {
+          return prevFilters;
+        }
+      });
+
+    } else {
+      setMaxPrice(500); // Reset to default if no products
+       setFilters(prevFilters => ({ ...prevFilters, priceRange: [0, 500] }));
+    }
+  }, [products]);
+
+  // Apply filters whenever filters state changes, except for the initial render
+  const initialRender = useRef(true);
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    // Only apply filters if not currently loading nearby products (which sets filteredProducts directly)
+    if (!isLoading) {
+       applyFilters();
+    }
+
+  }, [filters, products, isLoading, filterLocation, filterRadius]); // Depend on filters, products, and isLoading
+
+  // Effect to re-apply filters when nearbyProducts are fetched and isLoading becomes false
+  useEffect(() => {
+    if (!isLoading && nearbyProducts.length > 0) {
+       applyFilters();
+    }
+  }, [isLoading, nearbyProducts]); // Depend on isLoading and nearbyProducts
+
   return (
     <Router>
       <NotificationProvider>
@@ -506,7 +597,7 @@ function App() {
             <Route path="/listings/create" element={
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
-                <CreateListing />
+                <CreateListing availableCategories={availableCategories} />
                 <Footer />
               </RenterRoute>
             } />
@@ -515,7 +606,7 @@ function App() {
             <Route path="/edit-listing/:id" element={
               <RenterRoute>
                 <Header cartItemCount={cartItems.reduce((total, item) => total + item.quantity, 0)} />
-                <EditListing />
+                <EditListing availableCategories={availableCategories} />
                 <Footer />
               </RenterRoute>
             } />
@@ -534,7 +625,7 @@ function App() {
       <Header cartItemCount={cartLength} />
       <Hero onSearch={handleSearch} />
       <div className="container">
-        <FeaturedCategories onCategorySelect={handleCategorySelect} />
+        <FeaturedCategories onCategorySelect={handleCategorySelect} categories={availableCategories} />
       </div>
       <div className="container">
         <div className="main-content">
@@ -544,6 +635,8 @@ function App() {
   onResetFilters={resetFilters}
   userLocation={userLocation}
   onLocationSelect={handleLocationSelect}
+  maxPrice={maxPrice}
+  categories={availableCategories}
 />
           {isLoading ? (
             <div className="loading-container">
@@ -562,7 +655,7 @@ function App() {
               )}
               
               <ProductList 
-                products={products}
+                products={filteredProducts}
                 onAddToCart={addToCart}
                 filterLocation={filterLocation}
                 filterRadius={filterRadius}

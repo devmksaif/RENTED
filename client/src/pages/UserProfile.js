@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 
-// Fix Leaflet default icon issue
+
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useNavigate } from 'react-router-dom';
