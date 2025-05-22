@@ -440,7 +440,7 @@
 
 .location-search-input {
   flex: 1;
-  height: 54px;
+  height: 3rem;
   padding: 0 15px 0 45px;
   border-radius: 12px 0 0 12px;
   border: 1px solid #e0e0e0;
